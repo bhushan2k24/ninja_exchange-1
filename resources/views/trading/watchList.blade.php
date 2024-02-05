@@ -84,10 +84,10 @@
                                                 <tr>
                                                     <th>{{ $symbol_name }}</th>
                                                     <td pl-market="{{ $symbol }}"
-                                                        class="{{ $market . $symbol . 'BuyPrice' }} cursor-pointer open-watchlistoffcanvas">
+                                                        class="{{ $market . $symbol . 'BuyPrice' }} cursor-pointer open-watchlistoffcanvas bidclick">
                                                         00.00</td>
                                                     <td pl-market="{{ $symbol }}"
-                                                        class="{{ $market . $symbol . 'SellPrice' }} cursor-pointer open-watchlistoffcanvas">
+                                                        class="{{ $market . $symbol . 'SellPrice' }} cursor-pointer open-watchlistoffcanvas askclick">
                                                         00.00</td>
                                                     <td class="{{ $market . $symbol . 'LastTradePrice' }}">00.00</td>
                                                     <td class="{{ $market . $symbol . 'PriceChangePercentage' }}">00.00
@@ -127,123 +127,128 @@
     <div class="offcanvas offcanvas-bottom rounded-top offcanvas-primary" tabindex="-1" id="offcanvasBottom"
         aria-labelledby="offcanvasBottomLabel">
 
-        {{-- <div class="offcanvas-header">
-      <h5 id="offcanvasBottomLabel" class="offcanvas-title">GOLD-I 31AUG2023</h5>
-      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div> --}}
-        <div class="offcanvas-body">
-            <div class="row">
-                <div class="col-md-2 m-auto  text-center p-75">
-                    <h5 class="offcanvas-title text-primary scriptSymbol">GOLD-I 31AUG2023</h5>
-                    {{-- <div class="form-group">
-           <input type="text" class="form-control" placeholder="search" value="GOLD-I 31AUG2023" readonly> 
-      </div> --}}
-                </div>
-                <div class="col-md-10">
-                    <div class="card-body statistics-body py-0 pe-1">
-                        <div class="row justify-content-md-end justify-content-around  gap-25">
+        <form action="{{ route('save.trade') }}" method="POST">
+            
+            <input type="hidden" name="script_expires_id" id="script_expires_id">
 
-                            <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-success border-success p-50 rounded">
-                                <div class="d-flex flex-row">
-                                    <div class="my-auto">
-                                        <h4 class="fw-bo  lder mb-0 " pl-BuyPrice="NIFTY-I">0.00</h4>
-                                        <b class="card-text font-small-3 mb-0">BID RATE</b>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-success border-success p-50 rounded">
-                                <div class="d-flex flex-row">
-                                    <div class="my-auto">
-                                        <h4 class="fw-bolder mb-0 " pl-SellPrice="NIFTY-I">0.00</h4>
-                                        <b class="card-text font-small-3 mb-0">ASK RATE</b>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-success border-success p-50 rounded">
-                                <div class="d-flex flex-row">
-                                    <div class="my-auto">
-                                        <h4 class="fw-bolder mb-0" pl-LastTradePrice>0.00</h4>
-                                        <b class="card-text font-small-3 mb-0">LTP</b>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
-                                <div class="d-flex flex-row">
-                                    <div class="my-auto">
-                                        <h4 class="fw-bolder mb-0" pl-PriceChangePercentage>0.00</h4>
-                                        <b class="card-text font-small-3 mb-0">CHANGE(%)</b>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
-                                <div class="d-flex flex-row">
-                                    <div class="my-auto">
-                                        <h4 class="fw-bolder mb-0" pl-PriceChange>0.00</h4>
-                                        <b class="card-text font-small-3 mb-0">NET CHG</b>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
-                                <div class="d-flex flex-row">
-                                    <div class="my-auto">
-                                        <h4 class="fw-bolder mb-0" pl-High>0.00</h4>
-                                        <b class="card-text font-small-3 mb-0">HIGH</b>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
-                                <div class="d-flex flex-row">
-                                    <div class="my-auto">
-                                        <h4 class="fw-bolder mb-0" pl-Low>0.00</h4>
-                                        <b class="card-text font-small-3 mb-0">LOW</b>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
-                                <div class="d-flex flex-row">
-                                    <div class="my-auto">
-                                        <h4 class="fw-bolder mb-0" pl-Open>0.00</h4>
-                                        <b class="card-text font-small-3 mb-0">OPEN</b>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
-                                <div class="d-flex flex-row">
-                                    <div class="my-auto">
-                                        <h4 class="fw-bolder mb-0" pl-Close>0.00</h4>
-                                        <b class="card-text font-small-3 mb-0">CLOSE</b>
-                                    </div>
-                                </div>
-                            </div>
+            <div class="offcanvas-body">
+                <div class="row">
+                    <div class="col-md-2 m-auto  text-center p-75">
+                       
+                        <h5 class="offcanvas-title text-primary scriptSymbol" >GOLD-I 31AUG2023</h5>
 
+                    </div>
+                    <div class="col-md-10">
+                        <div class="card-body statistics-body py-0 pe-1">
+                            <div class="row justify-content-md-end justify-content-around  gap-25">
+
+                                <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-success border-success p-50 rounded">
+                                    <div class="d-flex flex-row">
+                                        <div class="my-auto">
+                                            <h4 class="fw-bo  lder mb-0 " pl-BuyPrice="NIFTY-I">0.00</h4>
+                                            <b class="card-text font-small-3 mb-0">BID RATE</b>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-success border-success p-50 rounded">
+                                    <div class="d-flex flex-row">
+                                        <div class="my-auto">
+                                            <h4 class="fw-bolder mb-0 " pl-SellPrice="NIFTY-I">0.00</h4>
+                                            <b class="card-text font-small-3 mb-0">ASK RATE</b>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-success border-success p-50 rounded">
+                                    <div class="d-flex flex-row">
+                                        <div class="my-auto">
+                                            <h4 class="fw-bolder mb-0" pl-LastTradePrice>0.00</h4>
+                                            <b class="card-text font-small-3 mb-0">LTP</b>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
+                                    <div class="d-flex flex-row">
+                                        <div class="my-auto">
+                                            <h4 class="fw-bolder mb-0" pl-PriceChangePercentage>0.00</h4>
+                                            <b class="card-text font-small-3 mb-0">CHANGE(%)</b>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
+                                    <div class="d-flex flex-row">
+                                        <div class="my-auto">
+                                            <h4 class="fw-bolder mb-0" pl-PriceChange>0.00</h4>
+                                            <b class="card-text font-small-3 mb-0">NET CHG</b>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
+                                    <div class="d-flex flex-row">
+                                        <div class="my-auto">
+                                            <h4 class="fw-bolder mb-0" pl-High>0.00</h4>
+                                            <b class="card-text font-small-3 mb-0">HIGH</b>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
+                                    <div class="d-flex flex-row">
+                                        <div class="my-auto">
+                                            <h4 class="fw-bolder mb-0" pl-Low>0.00</h4>
+                                            <b class="card-text font-small-3 mb-0">LOW</b>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
+                                    <div class="d-flex flex-row">
+                                        <div class="my-auto">
+                                            <h4 class="fw-bolder mb-0" pl-Open>0.00</h4>
+                                            <b class="card-text font-small-3 mb-0">OPEN</b>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
+                                    <div class="d-flex flex-row">
+                                        <div class="my-auto">
+                                            <h4 class="fw-bolder mb-0" pl-Close>0.00</h4>
+                                            <b class="card-text font-small-3 mb-0">CLOSE</b>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-12 col-md-2 row custom-options-checkable m-auto mt-1">
-                    <div class="col-6 col-md-6 p-0 pe-25">
-                        <input class="custom-option-item-check" type="radio" name="tradeBuySell" id="tradeBuy"
-                            value="buy" checked />
-                        <label class="custom-option-item p-50 text-center" for="tradeBuy">
-                            <span class="">
-                                <span class="fw-bolder">Buy</span>
-                            </span>
-                        </label>
+                <div class="row">
+                    <div class="col-12 col-md-2 row custom-options-checkable m-auto mt-1">
+                        <div class="col-6 col-md-6 p-0 pe-25">
+                            <input class="custom-option-item-check" type="radio" name="tradeBuySell" id="tradeBuy"
+                                value="buy" checked />
+                            <label class="custom-option-item p-50 text-center" for="tradeBuy">
+                                <span class="">
+                                    <span class="fw-bolder">Buy</span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="col-6 col-md-6 p-0 ps-25">
+                            <input class="custom-option-item-check custom-option-danger" type="radio"
+                                name="tradeBuySell" id="tradeSell" value="sell" />
+                            <label class="custom-option-item p-50 text-center" for="tradeSell">
+                                <span class="">
+                                    <span class="fw-bolder">Sell</span>
+                                </span>
+                            </label>
+                        </div>
                     </div>
 
-                    <div class="col-6 col-md-6 p-0 ps-25">
-                        <input class="custom-option-item-check custom-option-danger" type="radio" name="tradeBuySell"
-                            id="tradeSell" value="sell" />
-                        <label class="custom-option-item p-50 text-center" for="tradeSell">
-                            <span class="">
-                                <span class="fw-bolder">Sell</span>
-                            </span>
-                        </label>
-                    </div>
-                </div>
-
-                {{-- <div class="col-6 col-md-2 mt-1" name="order_type" id="order_type">
+                    {{-- <div class="col-6 col-md-2 mt-1" name="order_type" id="order_type">
                     <select class="select2 form-select">
                         <option value="market">Market</option>
                         <option value="limit">Limit</option>
@@ -252,47 +257,48 @@
                     <small class="error order_type-error"></small>
                 </div> --}}
 
-                <div class="col-6 col-md-2  mt-1">
-                    {{-- <label class="form-label" for="login-email">QTY</label> --}}
-                    <input class="form-control scriptLot" placeholder="Lot" value="" id="lot" type="number"
-                        name="lot" aria-describedby="lot" tabindex="1">
-                    <small class="error lot-error"></small>
+                    <div class="col-6 col-md-2  mt-1">
+                        {{-- <label class="form-label" for="login-email">QTY</label> --}}
+                        <input class="form-control scriptLot" placeholder="Lot" value="" id="lot"
+                            type="number" name="lot" aria-describedby="lot" tabindex="1">
+                        <small class="error lot-error"></small>
+                    </div>
+
+                    <div class="col-6 col-md-2  mt-1">
+                        {{-- <label class="form-label" for="login-email">QTY</label> --}}
+                        <input class="form-control scriptQuantityval" placeholder="Quantity" value=""
+                            id="quantity" type="number" name="quantity" aria-describedby="quantity" tabindex="1">
+                        <small class="error quantity-error"></small>
+                    </div>
+
+                    <div class="col-6 col-md-2  mt-1">
+                        {{-- <label class="form-label" for="login-email">QTY</label> --}}
+                        <input class="form-control scriptPriceCalc" placeholder="Price" value="" id="price" type="text"
+                            name="price" aria-describedby="price" tabindex="3">
+                        <small class="error price-error"></small>
+                    </div>
+
+                    <div class="col-6 col-md-2  mt-1">
+
+                        <select class="select2 form-select" name="client">
+                            <option value="market">Abc</option>
+                            <option value="client">Def</option>
+                            <option value="stop_loss">Ghi</option>
+                        </select>
+                        <small class="error client-error"></small>
+                    </div>
+                    <div class="col-12 col-md-2 d-flex align-items-start justify-content-end ps-0 mt-1">
+                        <button type="submit"
+                            class="btn btn-primary me-1 waves-effect waves-float waves-light">Continue</button>
+                        <button type="button" class="btn btn-outline-secondary waves-effect"
+                            data-bs-dismiss="offcanvas">Cancel</button>
+                    </div>
+
                 </div>
 
-                <div class="col-6 col-md-2  mt-1">
-                    {{-- <label class="form-label" for="login-email">QTY</label> --}}
-                    <input class="form-control scriptQuantityval" placeholder="Quantity" value="" id="quantity" type="number"
-                        name="quantity"  aria-describedby="quantity" tabindex="1">
-                    <small class="error quantity-error"></small>
-                </div>
-
-                <div class="col-6 col-md-2  mt-1">
-                    {{-- <label class="form-label" for="login-email">QTY</label> --}}
-                    <input class="form-control " placeholder="Price" value="" id="price" type="number"
-                        name="price" aria-describedby="price" tabindex="3">
-                    <small class="error price-error"></small>
-                </div>
-
-                <div class="col-6 col-md-2  mt-1">
-
-                    <select class="select2 form-select" name="client">
-                        <option value="market">Abc</option>
-                        <option value="client">Def</option>
-                        <option value="stop_loss">Ghi</option>
-                    </select>
-                    <small class="error client-error"></small>
-                </div>
-                <div class="col-12 col-md-2 d-flex align-items-start justify-content-end ps-0 mt-1">
-                    <button type="submit"
-                        class="btn btn-primary me-1 waves-effect waves-float waves-light">Continue</button>
-                    <button type="button" class="btn btn-outline-secondary waves-effect"
-                        data-bs-dismiss="offcanvas">Cancel</button>
-                </div>
 
             </div>
-
-
-        </div>
+        </form>
     </div>
 
 @endsection
@@ -313,6 +319,18 @@
 
     <script>
         $(document).ready(function() {
+            $('.bidclick').on('click', function () {
+                $('#tradeSell').prop('checked', true);
+                
+                
+                   
+            });
+
+            $('.askclick').on('click', function () {
+                $('#tradeBuy').prop('checked', true);
+                   
+            });
+
             $('input[name="tradeBuySell"]').change(function() {
 
 
@@ -328,57 +346,18 @@
 
             // Trigger the change event initially to set the initial state
             $('input[name="transaction"]:checked').change();
+
+          
+
         });
     </script>
 
     <script>
-        //  $(document).ready(function() {
-        //     $('.open-watchlistoffcanvas').on('click',function(){
-
-        //         $('#offcanvasBottom').offcanvas('toggle');
-        //         var plMarketValue = $(this).attr('pl-market');
-
-        //         $.ajax({
-        //         url: '{{ route('get.watchlist.ajax') }}',  
-        //         method: 'POST',
-        //         data: {plMarketValue: plMarketValue},
-        //         success: function(response) {
-        //             console.log(response);
-        //             var scriptQuantity=response.script_quanity;
-        //             var tradingSymbol=response.watchlist_trading_symbol;
-
-
-
-
-        //         },
-        //         error: function(error) {
-        //             console.error('Error:', error);
-        //         }
-        //         });
-
-
-
-        //         var Options = ['BuyPrice', 'SellPrice', 'Open', 'LastTradePrice', 'High', 'Low', 'Close',
-        //             'InstrumentIdentifier', 'PriceChange', 'PriceChangePercentage',];
-
-        //         Options.forEach(opt_value => {
-
-        //             var curValue = $('.' + '' + plMarketValue + opt_value).html();      
-
-        //             $("[pl-"+opt_value+"]").attr("pl-"+opt_value,plMarketValue);
-
-        //             $("[pl-"+opt_value+"="+plMarketValue+"]").html(curValue);
-        //         });
-
-
-
-        //     })
-        // });
 
         $(document).ready(function() {
             $('.open-watchlistoffcanvas').on('click', function() {
 
-                
+
                 var plMarketValue = $(this).attr('pl-market');
 
                 $.ajax({
@@ -392,16 +371,6 @@
 
 
                         if (response.Status == 200) {
-                            
-                            var scriptQuantity = response.Data.script_quantity;
-                            var tradingSymbol = response.Data.watchlist_trading_symbol;
-                            $('.scriptSymbol').html(tradingSymbol);
-                            $('.scriptQuantityval').val(scriptQuantity);
-                            $('.scriptLot').val('1');
-                            
-
-                            
-                           
 
                             if (response.Data.is_ban == 'yes') {
                                 toastr['warning'](
@@ -411,9 +380,9 @@
                                         tapToDismiss: false
                                     });
 
-                            }else{
+                            } else {
                                 $('#offcanvasBottom').offcanvas('toggle');
-                                
+
                             }
 
                             var Options = ['BuyPrice', 'SellPrice', 'Open', 'LastTradePrice',
@@ -438,9 +407,47 @@
                                     plMarketValue);
                                 $("[pl-" + opt_value + "=" + plMarketValue + "]").html(
                                     curValue);
+
+                                       // Create a hidden input field for each value
+                                        $('<input>').attr({
+                                            type: 'hidden',
+                                            name: opt_value,
+                                            value: curValue
+                                        }).appendTo('form');
                             });
+
+
+
+                            var scriptQuantity = response.Data.script_quantity;
+                            var scriptExpireId = response.Data.script_expires_id;
+                            $('#script_expires_id').val(scriptExpireId);
+                            var tradingSymbol = response.Data.watchlist_trading_symbol;
+                            $('.scriptSymbol').html(tradingSymbol);
+                            
+                                var lot = '1'; 
+                                $('.scriptLot').val(lot);
+                                $('.scriptQuantityval').val(lot * scriptQuantity);
+
+                                var bidvalue = $('.fw-bo[pl-BuyPrice]').text();
+                                bidvalue = bidvalue.replace(',', '');
+                                var askvalue = $('.fw-bolder[pl-SellPrice]').text();
+                                askvalue = askvalue.replace(',', '');
+
+                                $('.scriptPriceCalc').val(formattedScriptPrice);
+                                var scriptPrice;
+
+                                if ($('#tradeSell').is(':checked')) {
+                                        scriptPrice = lot*parseFloat(bidvalue);
+                                    } else {
+                                        scriptPrice = lot*parseFloat(askvalue);
+                                }
+
+                                var formattedScriptPrice = scriptPrice.toFixed(2);
+                                $('.scriptPriceCalc').val(formattedScriptPrice);
+ 
                         }
                     },
+
                     error: function(error) {
                         console.error('Error:', error);
                     }

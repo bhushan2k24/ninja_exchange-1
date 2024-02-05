@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Nex_Market;
 use App\Models\Nex_script;
 use App\Models\Nex_script_expire;
+use App\Models\nex_trade;
+use App\Models\nex_wallet;
 use App\Models\Nex_watchlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -157,6 +159,66 @@ class TradingController extends Controller
         }
         
         return faildResponse(['Message' => 'Provided All Information!']);
+    }
+
+
+    #Trade Store
+    public function store_trade(Request $request)
+    {
+        // dd($request->all());
+        $validated = Validator::make($request->all(), [
+            'lot' => 'required',
+            'quantity' => 'required',
+            'price' => 'required',
+        ]);
+        if ($validated->fails()) 
+            return faildResponse(['Message' => 'Validation Warning', 'Data' => $validated->errors()->toArray()]);
+
+            if ($request->tradeBuySell === 'buy') {
+                $totalWalletAmount = nex_wallet::where('user_id', Auth::id())->sum('wallet_amount');
+                // dd($totalWalletAmount);
+                if ($request->trade_price > $totalWalletAmount) {
+                    return faildResponse(['Message'=>'Insufficient Balance To Trade']);
+                }
+            }
+
+            $nex_trade = nex_trade::Create( 
+                [
+                    'user_id'=>Auth::id(),
+                    'script_expires_id'=>$request->script_expires_id,
+                    'trade_bidrate' => $request->BuyPrice,
+                    'trade_askrate' => $request->SellPrice,
+                    'trade_ltp' => $request->LastTradePrice,
+                    'trade_change'=>$request->PriceChangePercentage,
+                    'trade_netchange' => $request->PriceChange,
+                    'trade_high' => $request->High,
+                    'trade_low' => $request->Low,
+                    'trade_open' => $request->Open,
+                    'trade_close' => $request->Close,
+                    'trade_quantity' => $request->quantity,
+                    'trade_lot' => $request->lot,
+                    'trade_price' => $request->price,
+                    'trade_type' => $request->tradeBuySell,
+                    'trade_reference_id' => $request->script_extension
+    
+                ]
+            );
+
+            $transactionType = ($request->tradeBuySell === 'buy') ? 'debit' : 'credit';
+            $walletAmount = ($request->tradeBuySell === 'buy') ? -abs($nex_trade['trade_price']) : abs($nex_trade['trade_price']);
+
+
+            $walletData = [
+                'user_id' => Auth::id(),
+                'wallet_transaction_type' => $transactionType,
+                'wallet_amount' => $walletAmount,
+                'wallet_transaction_id'=>rand(11111111,99999999)
+            ];
+         
+    
+            nex_wallet::create($walletData);
+
+            return successResponse(['Message' => 'Success!', 'Data' => [], 'Redirect' => route('view.watchlist')]);
     }
 
     #WatchList Modules Stop

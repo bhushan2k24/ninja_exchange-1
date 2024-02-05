@@ -207,15 +207,13 @@ class TradingController extends Controller
             $transactionType = ($request->tradeBuySell === 'buy') ? 'debit' : 'credit';
             $walletAmount = ($request->tradeBuySell === 'buy') ? -abs($nex_trade['trade_price']) : abs($nex_trade['trade_price']);
 
-
             $walletData = [
                 'user_id' => Auth::id(),
                 'wallet_transaction_type' => $transactionType,
                 'wallet_amount' => $walletAmount,
                 'wallet_transaction_id'=>rand(11111111,99999999)
             ];
-         
-    
+
             nex_wallet::create($walletData);
 
             return successResponse(['Message' => 'Success!', 'Data' => [], 'Redirect' => route('view.watchlist')]);

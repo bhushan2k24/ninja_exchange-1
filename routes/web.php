@@ -28,7 +28,7 @@ use App\Http\Controllers\settings\LiveTvController;
 use App\Http\Controllers\settings\MaxQuantityController as SettingsMaxQuantityController;
 use App\Http\Controllers\settings\ScriptController as SettingsScriptController;
 use App\Http\Controllers\settings\TimeSettingController;
-
+use App\Http\Controllers\WalletController;
 
 /*
 |--------------------------------------------------------------------------
@@ -70,6 +70,8 @@ Route::middleware(['auth:admin','role:admin|master|user'])->group(function () {
         });
 
         Route::get('traders', [TradingController::class, 'traders'])->name('traders');
+        Route::get('tradespagination', [TradingController::class, 'trades_paginate_data'])->name('trades-paginate-data');
+        
         Route::get('portfolio', [TradingController::class, 'portfolio'])->name('portfolio');
         Route::get('blocked-script', [TradingController::class, 'blockedScript'])->name('blocked-script');
         Route::get('margin-management', [TradingController::class, 'marginManagement'])->name('margin-management');
@@ -78,7 +80,19 @@ Route::middleware(['auth:admin','role:admin|master|user'])->group(function () {
         Route::get('self-profit-loss', [TradingController::class, 'selfProfitLoss'])->name('self-profit-loss');
         Route::get('brokerage-refresh', [TradingController::class, 'brokerageRefresh'])->name('brokerage-refresh');
         Route::post('watchlist-save', [TradingController::class, 'saveWatchList'])->name('save.watchlist');
+        Route::delete('watchlist-remove/{id}', [TradingController::class, 'removewatchlist'])->name('remove.watchlist');
+        Route::post('get-watchlist-data', [TradingController::class, 'getwatchlistdata'])->name('get.watchlist.ajax');
+
+        Route::post('store-trade', [TradingController::class, 'store_trade'])->name('save.trade');
     });    
+    /* Route Trading */
+
+
+    /* Route Wallet */
+    Route::get('wallet', [WalletController::class, 'wallet'])->name('wallet.view');
+    Route::get('/walletpaginate', [WalletController::class, 'wallet_paginate_data'])->name('wallet_paginate_data');
+    Route::post('/walletstore', [WalletController::class, 'wallet_store'])->name('wallet.store');
+
     /* Route Trading */
 
      /* Profile Pages */

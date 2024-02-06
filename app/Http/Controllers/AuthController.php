@@ -200,7 +200,7 @@ class AuthController extends Controller
             'referrer_id' => $referrer ? $referrer->id : 0,
             'password' => bcrypt($request['password']),
         ]);
-        $usercode = strlen($user->id)>=8 ? $user->id : (str_pad(rand(1, 9999), (8-(strlen($user->id)>8 ? 8 : strlen($user->id))), '0', STR_PAD_RIGHT)).$user->id;
+        $usercode = strlen($user->id)>=6 ? $user->id : (str_pad(rand(1, 9999), (6-(strlen($user->id)>6 ? 6 : strlen($user->id))), '0', STR_PAD_RIGHT)).$user->id;
 
         $user->update(['referral_token'=>"NXCREF".numberToCharacterString($user->id),
                         'usercode'=>$usercode]);

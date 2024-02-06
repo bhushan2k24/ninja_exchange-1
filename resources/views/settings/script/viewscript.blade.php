@@ -24,13 +24,13 @@
         </div>
         <?php
         $is_started = (int)cache("import_script_current_row")?:0;   
-        $error = cache()->pull("import_script_error_msg")?:        
+        $error = cache("import_script_error_msg")?:        
         ((filled(cache("all_import_status_error")) && !$is_started>0) ? cache()->pull("all_import_status_error"):false);
         ?>
     
     @if($error)
         <div class="d-inline-block col-6 import-script-error  px-2 float-end text-end">    
-            <small class="error text-danger">{{preg_replace('/<br\s*\/?>/', "\n", $error);}}</small> 
+            <small class="error text-danger">{!!$error!!}</small> 
         </div>
     @endif
     </div>

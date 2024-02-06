@@ -385,6 +385,11 @@ function sideContentData($array = [])
                     'label'=>'add account',
                     'link'=>'create.user',
                     'icon'=>'user-plus',
+                ],
+                [
+                    'label'=>'wallet',
+                    'link'=>'wallet.view',
+                    'icon'=>'circle',
                 ]
             ]
         ],

@@ -2,9 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Administrator;
+use App\Models\Nex_Market;
+use App\Models\Nex_script;
 use App\Models\Nex_script_expire;
+use App\Models\nex_trade;
+use App\Models\nex_wallet;
+use App\Models\Nex_watchlist;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Collection;
+
 class TradingController extends Controller
 {
     #----------------------------------------------------------------
@@ -14,10 +25,107 @@ class TradingController extends Controller
     {
         $file['title'] = 'WatchList';        
         $file['marketdata'] = marketdata(0,0,1);
+        
+        $watchlist_data=Nex_watchlist::select('id','market_id','watchlist_market_name','watchlist_trading_symbol','watchlist_script_extension')->orderBy('market_id')->get();
+
+        $user_data=Administrator::where('user_position','user')->where('user_status','active')->get();
+
+        $file['watchlist_data'] = $watchlist_data;
+        $file['user_data'] = $user_data;
+
+        $file['MyWatchScript'] = $watchlist_data->pluck('watchlist_script_extension');
 
         return view('trading.watchList', $file);
     }
     #----------------------------------------------------------------
+    #----------------------------------------------------------------
+    #Remove From Watchlist
+    public function removewatchlist(Request $request,$id)
+    {
+        $watchlist = Nex_watchlist::find($id);
+        $watchlist->delete();
+   
+        return successResponse(['Message'=>'Success!', 'Data'=>[],'Redirect'=>route('view.watchlist')]);
+    }
+
+
+    #----------------------------------------------------------------
+    #WatchList Save Page
+
+    public function saveWatchList(Request $request)
+    {
+
+          $validated = Validator::make($request->all(), [
+            'watchlist_filter_market' => 'required',
+            'watchlist_filter_script' => 'required',
+            'watchlist_filter_expiry' => 'required',
+        ]);
+        if ($validated->fails()) 
+            return faildResponse(['Message' => 'Validation Warning', 'Data' => $validated->errors()->toArray()]);
+
+        $market = Nex_Market::find($request->watchlist_filter_market);
+        $script = Nex_script::find($request->watchlist_filter_script);
+
+
+        if($market->market_name=='NSEOPT'){
+            $validated = Validator::make($request->all(), [
+                'watchlist_filter_market' => 'required',
+                'watchlist_filter_script' => 'required',
+                'watchlist_filter_expiry' => 'required',
+                'watchlist_filter_ce_pe' => 'required',
+                'watchlist_filter_strick' => 'required',
+            ]);
+            if ($validated->fails()) 
+                return faildResponse(['Message' => 'Validation Warning', 'Data' => $validated->errors()->toArray()]);
+        }
+
+
+        $script_expire = Nex_script_expire::where('market_id', $request->watchlist_filter_market)
+                ->where('script_id', $request->watchlist_filter_script)
+                ->where('expiry_date', $request->watchlist_filter_expiry);
+
+                if($market->market_name=='NSEOPT'){
+                    $script_expire = $script_expire->where('script_instrument_type', $request->watchlist_filter_ce_pe)->where('script_strike_price', $request->watchlist_filter_strick);
+                }
+        $script_expire =  $script_expire->first();
+
+        $nex_add_watchlist = Nex_watchlist::updateOrCreate( 
+            ['market_id'=>$request->market_id,'script_id' => $request->watchlist_filter_script,'script_expires_id'=>$script_expire->id],
+            [
+                'user_id'=>Auth::id(),
+                'market_id' => $request->watchlist_filter_market,
+                'watchlist_market_name' => $market->market_name,
+                'script_id' => $request->watchlist_filter_script,
+                'watchlist_script_name' => $script->script_name,
+                'script_expires_id'=>$script_expire->id,
+                'watchlist_script_expiry_date' => $request->watchlist_filter_expiry,
+                'watchlist_instrument_type' => $script_expire->script_instrument_type,
+                'watchlist_script_strike_price' => $script_expire->script_strike_price,
+                'watchlist_trading_symbol' => $script_expire->script_trading_symbol,
+                'watchlist_script_extension' => $script_expire->script_extension
+
+            ]
+        ); 
+        return successResponse(['Message' => 'Success!', 'Data' => [], 'Redirect' => route('view.watchlist')]);
+    }
+
+    #----------------------------------------------------------------
+    #----------------------------------------------------------------
+    #Get With Ajax 
+
+    public function getwatchlistdata(Request $request){
+        $plMarketValue = $request->input('plMarketValue');
+    
+
+        $data = DB::table('nex_watchlists')
+        ->join('nex_scripts','nex_scripts.id','=','nex_watchlists.script_id')
+        ->select('nex_watchlists.*','nex_scripts.script_quantity','nex_scripts.is_ban')
+        ->where('watchlist_script_extension', $plMarketValue)->orderBy('id','DESC')->first();
+        return successResponse(['Data' => $data]);
+    }
+    
+
+
 
     #----------------------------------------------------------------
     #to get dependent filter data
@@ -42,17 +150,90 @@ class TradingController extends Controller
         {
             if(!$request->script_id || !$request->expiry_date || !$request->filter_ce_pe)
                 return faildResponse(['Message'=>'Please pass a Script , Expiry Date , CE/PE!']);
-
+            
             $filterdata = $getScripts->select('script_strike_price')->where(
-                ['script_id'=>$request->script_id],
-                ['script_instrument_type'=>$request->filter_ce_pe],
-                ['expiry_date'=>$request->expiry_date]        
+                [
+                'market_id'=>$request->market_id,
+                'script_id'=>$request->script_id,
+                'script_instrument_type'=>$request->filter_ce_pe,
+                'expiry_date'=>$request->expiry_date
+                ]        
             )->where('script_strike_price','>',0)->pluck('script_strike_price')->toArray();
 
             return successResponse(['Message' => 'Record Fetched Successfully!','setValueTo'=>'watchlist_filter_strick','Data'=>$filterdata]);
         }
         
         return faildResponse(['Message' => 'Provided All Information!']);
+    }
+
+
+    #Trade Store
+    public function store_trade(Request $request)
+    {
+        // dd($request->all());
+        $validated = Validator::make($request->all(), [
+            'lot' => 'required',
+            'quantity' => 'required',
+            'price' => 'required',
+        ]);
+
+        if ($validated->fails()) 
+            return faildResponse(['Message' => 'Validation Warning', 'Data' => $validated->errors()->toArray()]);
+
+        if ($request->tradeBuySell === 'buy'){
+
+            $id = Auth::guard('admin')->user()->hasRole('admin','master') ? $request->client : Auth::id();
+
+
+            dd($id);
+
+            $totalWalletAmount = nex_wallet::where('user_id', $id)->sum('wallet_amount');
+            if ($request->trade_price > $totalWalletAmount) {
+                return faildResponse(['Message'=>'Insufficient Balance To Trade']);
+            }
+        }
+
+        $user_id = $request->client == '' ? Auth::id() : $request->client;
+        $created_by = Auth::id();      
+
+        $nex_trade = nex_trade::Create( 
+            [
+                'user_id'=>$user_id,
+                'created_by'=>$created_by,
+                'script_expires_id'=>$request->script_expires_id,
+                'trade_bidrate' => $request->BuyPrice,
+                'trade_askrate' => $request->SellPrice,
+                'trade_ltp' => $request->LastTradePrice,
+                'trade_change'=>$request->PriceChangePercentage,
+                'trade_netchange' => $request->PriceChange,
+                'trade_high' => $request->High,
+                'trade_low' => $request->Low,
+                'trade_open' => $request->Open,
+                'trade_close' => $request->Close,
+                'trade_quantity' => $request->quantity,
+                'trade_lot' => $request->lot,
+                'trade_price' => $request->price,
+                'trade_type' => $request->tradeBuySell,
+                'trade_order_type' => '',
+                'trade_reference_id' => $request->script_extension,
+                'user_ip' => $request->getClientIp()
+
+            ]
+        );
+
+            $transactionType = ($request->tradeBuySell === 'buy') ? 'debit' : 'credit';
+            $walletAmount = ($request->tradeBuySell === 'buy') ? -abs($nex_trade['trade_price']) : abs($nex_trade['trade_price']);
+
+            $walletData = [
+                'user_id' =>  $user_id,
+                'wallet_transaction_type' => $transactionType,
+                'wallet_amount' => $walletAmount,
+                'wallet_transaction_id'=>rand(11111111,99999999)
+            ];
+
+            nex_wallet::create($walletData);
+
+            return successResponse(['Message' => 'Success!', 'Data' => [], 'Redirect' => route('view.watchlist')]);
     }
 
     #WatchList Modules Stop
@@ -65,7 +246,7 @@ class TradingController extends Controller
         $file['title'] = 'traders';
         $file['tradersFormData'] = [
             'name'=>'watchlist-form',
-            'action'=>'',
+            'action'=>route('trades-paginate-data'),
             'btnGrid'=>2,
             'submit'=>'find orders',
             'fieldData'=>[
@@ -161,7 +342,57 @@ class TradingController extends Controller
                 ],
             ],
         ];
-        return view('/trading/traders', $file);
+        return view('trading.traders', $file);
+    }
+
+
+
+
+    public function trades_paginate_data(Request $request)
+    {
+        if ($request->ajax()) {            
+            $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','administrators.*','nex_script_expires.market_name','nex_script_expires.script_trading_symbol');
+            $thead = ['D','CLIENT','MARKET','SCRIPT',"B/S",'ORDER TYPE','LOT','QTY','ORDER PRICE','STATUS','"USER IP','UPDATED AT','ACTION'];
+            if(!empty($request->market_name))
+                $Data->where('market_id','=',$request->input('market_name'));
+            
+            if(!empty($request->search))
+            {
+                $Data->where(function ($query) use ($request) {
+                    $query->where('script_name','LIKE','%'.$request->search."%")->orWhere('market_name','LIKE','%'.$request->search."%")->orWhere('updated_at','LIKE','%'.$request->search."%");
+                });
+            }
+            $tbody = $Data->paginate(10);
+            // dd($tbody);
+            $tbody_data = $tbody->items();
+            foreach ($tbody_data as $key => $data) {
+                $tbody_data[$key] = 
+                [
+                    '<i data-feather="smartphone"></i>',
+                    $data->usercode,
+                    $data->market_name,
+                    $data->script_trading_symbol,
+                    $data->trade_type,
+                    $data->trade_order_type,
+                    $data->trade_lot,
+                    $data->trade_quantity,
+                    $data->trade_price,
+                    ucwords($data->trade_status),
+                    $data->last_login_ip,
+                    $data->updated_at,
+                    '<a href="javascript:void(0);" class="avatar avatar-status bg-light-danger delete_record" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete" deleteto="'.encrypt_to('nex_trades').'/'.encrypt_to($data->id).'">
+                    <span class="avatar-content">
+                        <i data-feather=\'trash-2\' class="avatar-icon"></i>
+                    </span>
+                    </a>'
+                 
+                    
+                ];
+          }
+          $tbody->setCollection(new Collection($tbody_data));
+
+          return view('datatable.datatable', compact('tbody','thead'))->render();
+        }     
     }
     // ---------------
 

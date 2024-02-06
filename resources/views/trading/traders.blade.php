@@ -8,8 +8,9 @@
     <div class="col-12">
       <div class="card">
         <div class="card-body">
-          <?= createFormHtmlContent($tradersFormData)?>
-          <div class="row mb-2 mt-2">
+          <?= createDatatableFormFilter($tradersFormData)?>
+        
+          {{-- <div class="row mb-2 mt-2">
             <div class="col-12">
               <div class="row justify-content-between mb-2">
                 <div class="col-2">
@@ -56,7 +57,7 @@
                 </table>
               </div>
             </div>
-          </div>
+          </div> --}}
         </div>
       </div>
     </div>

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Collection;
 
 class TradingController extends Controller
 {
@@ -175,49 +176,56 @@ class TradingController extends Controller
             'quantity' => 'required',
             'price' => 'required',
         ]);
+
         if ($validated->fails()) 
             return faildResponse(['Message' => 'Validation Warning', 'Data' => $validated->errors()->toArray()]);
 
-            if ($request->tradeBuySell === 'buy') {
-                $totalWalletAmount = nex_wallet::where('user_id', Auth::id())->sum('wallet_amount');
-                // dd($totalWalletAmount);
-                if ($request->trade_price > $totalWalletAmount) {
-                    return faildResponse(['Message'=>'Insufficient Balance To Trade']);
-                }
+        if ($request->tradeBuySell === 'buy'){
+
+            $id = Auth::guard('admin')->user()->hasRole('admin','master') ? $request->client : Auth::id();
+
+
+            dd($id);
+
+            $totalWalletAmount = nex_wallet::where('user_id', $id)->sum('wallet_amount');
+            if ($request->trade_price > $totalWalletAmount) {
+                return faildResponse(['Message'=>'Insufficient Balance To Trade']);
             }
+        }
 
-            $user_id = $request->client == '' ? Auth::id() : $request->client;
-            $created_by = Auth::id();
-            
+        $user_id = $request->client == '' ? Auth::id() : $request->client;
+        $created_by = Auth::id();      
 
-            $nex_trade = nex_trade::Create( 
-                [
-                    'user_id'=>$user_id,
-                    'created_by'=>$created_by,
-                    'script_expires_id'=>$request->script_expires_id,
-                    'trade_bidrate' => $request->BuyPrice,
-                    'trade_askrate' => $request->SellPrice,
-                    'trade_ltp' => $request->LastTradePrice,
-                    'trade_change'=>$request->PriceChangePercentage,
-                    'trade_netchange' => $request->PriceChange,
-                    'trade_high' => $request->High,
-                    'trade_low' => $request->Low,
-                    'trade_open' => $request->Open,
-                    'trade_close' => $request->Close,
-                    'trade_quantity' => $request->quantity,
-                    'trade_lot' => $request->lot,
-                    'trade_price' => $request->price,
-                    'trade_type' => $request->tradeBuySell,
-                    'trade_reference_id' => $request->script_extension
-    
-                ]
-            );
+        $nex_trade = nex_trade::Create( 
+            [
+                'user_id'=>$user_id,
+                'created_by'=>$created_by,
+                'script_expires_id'=>$request->script_expires_id,
+                'trade_bidrate' => $request->BuyPrice,
+                'trade_askrate' => $request->SellPrice,
+                'trade_ltp' => $request->LastTradePrice,
+                'trade_change'=>$request->PriceChangePercentage,
+                'trade_netchange' => $request->PriceChange,
+                'trade_high' => $request->High,
+                'trade_low' => $request->Low,
+                'trade_open' => $request->Open,
+                'trade_close' => $request->Close,
+                'trade_quantity' => $request->quantity,
+                'trade_lot' => $request->lot,
+                'trade_price' => $request->price,
+                'trade_type' => $request->tradeBuySell,
+                'trade_order_type' => '',
+                'trade_reference_id' => $request->script_extension,
+                'user_ip' => $request->getClientIp()
+
+            ]
+        );
 
             $transactionType = ($request->tradeBuySell === 'buy') ? 'debit' : 'credit';
             $walletAmount = ($request->tradeBuySell === 'buy') ? -abs($nex_trade['trade_price']) : abs($nex_trade['trade_price']);
 
             $walletData = [
-                'user_id' => Auth::id(),
+                'user_id' =>  $user_id,
                 'wallet_transaction_type' => $transactionType,
                 'wallet_amount' => $walletAmount,
                 'wallet_transaction_id'=>rand(11111111,99999999)
@@ -238,7 +246,7 @@ class TradingController extends Controller
         $file['title'] = 'traders';
         $file['tradersFormData'] = [
             'name'=>'watchlist-form',
-            'action'=>'',
+            'action'=>route('trades-paginate-data'),
             'btnGrid'=>2,
             'submit'=>'find orders',
             'fieldData'=>[
@@ -335,6 +343,56 @@ class TradingController extends Controller
             ],
         ];
         return view('trading.traders', $file);
+    }
+
+
+
+
+    public function trades_paginate_data(Request $request)
+    {
+        if ($request->ajax()) {            
+            $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','administrators.*','nex_script_expires.market_name','nex_script_expires.script_trading_symbol');
+            $thead = ['D','CLIENT','MARKET','SCRIPT',"B/S",'ORDER TYPE','LOT','QTY','ORDER PRICE','STATUS','"USER IP','UPDATED AT','ACTION'];
+            if(!empty($request->market_name))
+                $Data->where('market_id','=',$request->input('market_name'));
+            
+            if(!empty($request->search))
+            {
+                $Data->where(function ($query) use ($request) {
+                    $query->where('script_name','LIKE','%'.$request->search."%")->orWhere('market_name','LIKE','%'.$request->search."%")->orWhere('updated_at','LIKE','%'.$request->search."%");
+                });
+            }
+            $tbody = $Data->paginate(10);
+            // dd($tbody);
+            $tbody_data = $tbody->items();
+            foreach ($tbody_data as $key => $data) {
+                $tbody_data[$key] = 
+                [
+                    '<i data-feather="smartphone"></i>',
+                    $data->usercode,
+                    $data->market_name,
+                    $data->script_trading_symbol,
+                    $data->trade_type,
+                    $data->trade_order_type,
+                    $data->trade_lot,
+                    $data->trade_quantity,
+                    $data->trade_price,
+                    ucwords($data->trade_status),
+                    $data->last_login_ip,
+                    $data->updated_at,
+                    '<a href="javascript:void(0);" class="avatar avatar-status bg-light-danger delete_record" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete" deleteto="'.encrypt_to('nex_trades').'/'.encrypt_to($data->id).'">
+                    <span class="avatar-content">
+                        <i data-feather=\'trash-2\' class="avatar-icon"></i>
+                    </span>
+                    </a>'
+                 
+                    
+                ];
+          }
+          $tbody->setCollection(new Collection($tbody_data));
+
+          return view('datatable.datatable', compact('tbody','thead'))->render();
+        }     
     }
     // ---------------
 

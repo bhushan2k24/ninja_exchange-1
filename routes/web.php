@@ -70,6 +70,8 @@ Route::middleware(['auth:admin','role:admin|master|user'])->group(function () {
         });
 
         Route::get('traders', [TradingController::class, 'traders'])->name('traders');
+        Route::get('tradespagination', [TradingController::class, 'trades_paginate_data'])->name('trades-paginate-data');
+        
         Route::get('portfolio', [TradingController::class, 'portfolio'])->name('portfolio');
         Route::get('blocked-script', [TradingController::class, 'blockedScript'])->name('blocked-script');
         Route::get('margin-management', [TradingController::class, 'marginManagement'])->name('margin-management');

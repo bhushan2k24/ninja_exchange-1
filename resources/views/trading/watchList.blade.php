@@ -325,13 +325,14 @@
         $(document).ready(function() {
             $('.bidclick').on('click', function () {
                 $('#tradeSell').prop('checked', true);
-                
-                
+                $('#tradeSell').change();
+
                    
             });
 
             $('.askclick').on('click', function () {
                 $('#tradeBuy').prop('checked', true);
+                $('#tradeBuy').change();
                    
             });
 

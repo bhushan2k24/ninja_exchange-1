@@ -277,7 +277,7 @@ class UserController extends Controller
 
             'user_remark' => $request->user_remark,
         ]);
-        $usercode = strlen($user->id)>=8 ? $user->id : (str_pad(rand(1, 9999), (8-(strlen($user->id)>8 ? 8 : strlen($user->id))), '0', STR_PAD_RIGHT)).$user->id;
+        $usercode = strlen($user->id)>=6 ? $user->id : (str_pad(rand(1, 9999), (6-(strlen($user->id)>6 ? 6 : strlen($user->id))), '0', STR_PAD_RIGHT)).$user->id;
 
         $user->update(['referral_token'=>"NXCREF".numberToCharacterString($user->id),
                         'usercode'=>$usercode]);
@@ -294,7 +294,7 @@ class UserController extends Controller
 
             foreach ($request->market_type_value as $m_tkey => $m_tvalue) 
             {
-                $marketData= marketData($m_tvalue);
+                $marketData = marketData($m_tvalue);
                 if(is_null($marketData))
                     continue;                  
                 if(!empty($request->market_type[$m_tvalue]))

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\nex_wallet;
+use App\Models\Nex_wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +14,7 @@ class WalletController extends Controller
     public function wallet()
     {
        
-        $wallet = nex_wallet::where('user_id',Auth::id())->paginate(10);
+        $wallet = Nex_wallet::where('user_id',Auth::id())->paginate(10);
 
         $file['wallet'] = $wallet;
         $file['title'] = ucwords("wallet");
@@ -29,7 +29,7 @@ class WalletController extends Controller
 
         if ($request->ajax()) {
             
-            $Data = DB::table('nex_wallets')->where('user_id',Auth::id());
+            $Data = DB::table('Nex_wallets')->where('user_id',Auth::id());
             
             $thead = ['TRANSACTION TYPE','AMOUNT','REMARKS',"TRANSACTION ID",'UPDATED AT'];
             if(!empty($request->market_name))
@@ -75,7 +75,7 @@ class WalletController extends Controller
             return faildResponse(['Message' => 'Validation Warning', 'Data' => $validated->errors()->toArray()]);
         }        
 
-        $wallet = nex_wallet::updateOrCreate( 
+        $wallet = Nex_wallet::updateOrCreate( 
             ['id' => $request->id],
             [
                 'user_id' => Auth::id(),

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class nex_trade extends Model
+class Nex_trade extends Model
 {
     use HasFactory;
     protected $fillable = [

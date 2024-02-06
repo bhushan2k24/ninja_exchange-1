@@ -38,7 +38,7 @@
                   </g>
                 </g>
               </svg></span>
-            <h2 class="brand-text mb-0">Vuexy</h2>
+            <h2 class="brand-text mb-0">{{setting('site_name')}}</h2>
           </a>
         </li>
       </ul>
@@ -60,7 +60,7 @@
       </div>
       <div class="user-nav d-sm-flex d-none">
         <div class="my-auto">
-            <h5 class="fw-bolder mb-0 NFOBANKNIFTY-IBuyPrice">00,000.00</h5>
+            <h5 class="fw-bolder mb-0 BANKNIFTY-IBuyPrice">00,000.00</h5>
             <p class="card-text font-small-3 mb-0 ">BANK NIFTY</p>
         </div>
       </div>
@@ -72,7 +72,7 @@
       </div>
       <div class="user-nav d-sm-flex d-none">
         <div class="my-auto">
-            <h5 class="fw-bolder mb-0 NFONIFTY-IBuyPrice">00,000.00</h5>
+            <h5 class="fw-bolder mb-0 NIFTY-IBuyPrice">00,000.00</h5>
             <p class="card-text font-small-3 mb-0">NIFTY</p>
         </div>
       </div>

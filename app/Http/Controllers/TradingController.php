@@ -6,8 +6,8 @@ use App\Models\Administrator;
 use App\Models\Nex_Market;
 use App\Models\Nex_script;
 use App\Models\Nex_script_expire;
-use App\Models\nex_trade;
-use App\Models\nex_wallet;
+use App\Models\Nex_trade;
+use App\Models\Nex_wallet;
 use App\Models\Nex_watchlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -182,21 +182,19 @@ class TradingController extends Controller
 
         if ($request->tradeBuySell === 'buy'){
 
-            $id = Auth::guard('admin')->user()->hasRole('admin','master') ? $request->client : Auth::id();
+            $id = !Auth::guard('admin')->user()->hasRole('user') ? $request->client : Auth::id();
 
 
-            dd($id);
-
-            $totalWalletAmount = nex_wallet::where('user_id', $id)->sum('wallet_amount');
-            if ($request->trade_price > $totalWalletAmount) {
-                return faildResponse(['Message'=>'Insufficient Balance To Trade']);
+            $totalWalletAmount = Nex_wallet::where('user_id', $id)->sum('wallet_amount');
+            if ($request->price > $totalWalletAmount) {
+                return faildResponse(['Data'=>['price'=>['Insufficient Balance To Trade']],'Message'=>'Insufficient Balance To Trade']);
             }
         }
 
         $user_id = $request->client == '' ? Auth::id() : $request->client;
         $created_by = Auth::id();      
 
-        $nex_trade = nex_trade::Create( 
+        $nex_trade = Nex_trade::Create( 
             [
                 'user_id'=>$user_id,
                 'created_by'=>$created_by,
@@ -231,7 +229,7 @@ class TradingController extends Controller
                 'wallet_transaction_id'=>rand(11111111,99999999)
             ];
 
-            nex_wallet::create($walletData);
+            Nex_wallet::create($walletData);
 
             return successResponse(['Message' => 'Success!', 'Data' => [], 'Redirect' => route('view.watchlist')]);
     }

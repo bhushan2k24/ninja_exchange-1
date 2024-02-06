@@ -10,8 +10,8 @@ class nex_trade extends Model
     use HasFactory;
     protected $fillable = [
         'user_id',
+        'created_by',
         'script_expires_id',
-        'watchlist_id',
         'trade_bidrate',
         'trade_askrate',
         'trade_change',

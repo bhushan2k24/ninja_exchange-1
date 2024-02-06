@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Administrator;
 use App\Models\Nex_Market;
 use App\Models\Nex_script;
 use App\Models\Nex_script_expire;
@@ -26,7 +27,10 @@ class TradingController extends Controller
         
         $watchlist_data=Nex_watchlist::select('id','market_id','watchlist_market_name','watchlist_trading_symbol','watchlist_script_extension')->orderBy('market_id')->get();
 
+        $user_data=Administrator::where('user_position','user')->where('user_status','active')->get();
+
         $file['watchlist_data'] = $watchlist_data;
+        $file['user_data'] = $user_data;
 
         $file['MyWatchScript'] = $watchlist_data->pluck('watchlist_script_extension');
 
@@ -182,9 +186,14 @@ class TradingController extends Controller
                 }
             }
 
+            $user_id = $request->client == '' ? Auth::id() : $request->client;
+            $created_by = Auth::id();
+            
+
             $nex_trade = nex_trade::Create( 
                 [
-                    'user_id'=>Auth::id(),
+                    'user_id'=>$user_id,
+                    'created_by'=>$created_by,
                     'script_expires_id'=>$request->script_expires_id,
                     'trade_bidrate' => $request->BuyPrice,
                     'trade_askrate' => $request->SellPrice,
@@ -325,7 +334,7 @@ class TradingController extends Controller
                 ],
             ],
         ];
-        return view('/trading/traders', $file);
+        return view('trading.traders', $file);
     }
     // ---------------
 

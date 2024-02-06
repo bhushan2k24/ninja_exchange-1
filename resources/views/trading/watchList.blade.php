@@ -261,6 +261,7 @@
                         {{-- <label class="form-label" for="login-email">QTY</label> --}}
                         <input class="form-control scriptLot" placeholder="Lot" value="" id="lot"
                             type="number" name="lot" aria-describedby="lot" tabindex="1">
+                            <label class="form-label text-center ms-5" for="lot">Lot</label>
                         <small class="error lot-error"></small>
                     </div>
 
@@ -268,25 +269,28 @@
                         {{-- <label class="form-label" for="login-email">QTY</label> --}}
                         <input class="form-control scriptQuantityval" placeholder="Quantity" value=""
                             id="quantity" type="number" name="quantity" aria-describedby="quantity" tabindex="1">
+                            <label class="form-label text-center ms-5" for="quantity">Quantity</label>
                         <small class="error quantity-error"></small>
                     </div>
 
                     <div class="col-6 col-md-2  mt-1">
                         {{-- <label class="form-label" for="login-email">QTY</label> --}}
                         <input class="form-control scriptPriceCalc" placeholder="Price" value="" id="price" type="text"
-                            name="price" aria-describedby="price" tabindex="3">
+                            name="price" aria-describedby="price" readonly tabindex="3">
+                            <label class="form-label text-center ms-5" for="price">Price</label>
                         <small class="error price-error"></small>
                     </div>
-
-                    <div class="col-6 col-md-2  mt-1">
-
+                    @if(Auth::user()->user_position!='user')
+                    <div class="col-6 col-md-2  mt-1">           
                         <select class="select2 form-select" name="client">
-                            <option value="market">Abc</option>
-                            <option value="client">Def</option>
-                            <option value="stop_loss">Ghi</option>
+                            @foreach ($user_data as $user)  
+                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            @endforeach
                         </select>
+                        <label class="form-label text-center ms-5" for="client">User</label>
                         <small class="error client-error"></small>
                     </div>
+                    @endif
                     <div class="col-12 col-md-2 d-flex align-items-start justify-content-end ps-0 mt-1">
                         <button type="submit"
                             class="btn btn-primary me-1 waves-effect waves-float waves-light">Continue</button>
@@ -417,7 +421,6 @@
                             });
 
 
-
                             var scriptQuantity = response.Data.script_quantity;
                             var scriptExpireId = response.Data.script_expires_id;
                             $('#script_expires_id').val(scriptExpireId);
@@ -433,7 +436,7 @@
                                 var askvalue = $('.fw-bolder[pl-SellPrice]').text();
                                 askvalue = askvalue.replace(',', '');
 
-                                $('.scriptPriceCalc').val(formattedScriptPrice);
+                               
                                 var scriptPrice;
 
                                 if ($('#tradeSell').is(':checked')) {
@@ -458,32 +461,6 @@
 
 
     <script>
-        // const socket = io('https://thedatamining.org:6003');
-
-        // // // // Define the data to be sent
-        // // // const addMarketWatchData = { product: ['GOLD-I','SILVER-I','SILVERM-I','SILVERMIC-I','AUDJPY','AUDUSD','CADJPY','EURUSD','GBPUSD','NIFTY-I'] };
-        // // // // Emit the 'addMarketWatch' event with the specified data
-        // // // socket.emit('addMarketWatch', addMarketWatchData);
-
-
-        // var stock_array = ['GOLD-I', 'SILVER-I', 'SILVERM-I', 'SILVERMIC-I', 'AUDJPY', 'AUDUSD', 'CADJPY', 'EURUSD',
-        //     'GBPUSD', 'NIFTY-I', 'BANKNIFTY-I', 'NIFTY23122821000CE', ' '];
-
-        // stock_array.forEach(function($val) {
-        //     // Emit the 'addMarketWatch' event with the specified data
-        //     socket.emit('addMarketWatch', {
-        //         product: $val
-        //     });
-        // });
-
-
-        // socket.on('marketWatch', (marketData) => {
-        //     // console.log('Received marketWatch event with data:', marketData);  
-        //     if (marketData?.data?.Exchange !== undefined)
-        //         setMarketValues(marketData);
-        // });
-
-
 
         $(document).on('change', "[name='watchlist_filter_market']", function(e) {
             $("[name='watchlist_filter_ce_pe']").attr('disabled', true);
@@ -527,62 +504,5 @@
             });
 
         var MyWatchScript = @json($MyWatchScript);
-
-
-
-        // var ip  = location.host;
-        // const mysocket = io(ip+':3000');   
-
-        // mysocket.on('connect', (sock) => {
-        //     // mysocket.socket.sessionid;
-        //     console.log('Connection established',mysocket.id);
-        //     mysocket.emit('updateData', {
-        //     // product: ["{{ Auth::user()->id == 1 ? 'GOLD-I' : 'SILVER-I' }}"]
-        //     product: ['GOLD-I', 'SILVER-I', 'SILVERM-I', 'SILVERMIC-I', 'AUDJPY', 'AUDUSD', 'CADJPY', 'EURUSD','GBPUSD', 'NIFTY23122821000CE', 'EURINR24NOVFUT']
-        // });
-        // });
-
-        // mysocket.on('updateData', (marketData) => {
-        //     console.log('Received data:', marketData);
-        //     if (marketData?.data?.Exchange !== undefined)
-        //         setMarketValues(marketData);
-        // });
-
-        // mysocket.on('connect_error', (error) => {
-        //     console.error('Socket.IO connection error:', error);
-        // });
-
-
-
-        // Listen for the 'marketWatch' event
-        //     socket.on('marketWatch', (marketData) => {
-
-        //       marketData.forEach(value => {
-        //           console.log(value);
-        //           // Your code for each filtered element goes here
-        //       });
-
-        // //     if (!Array.isArray(marketData)) {
-        // //     console.error('marketData is not an array');
-        // // } else {
-        // //     // Now you can use filter
-        // //     marketData = marketData.filter(marketWatch => marketWatch.InstrumentIdentifier);
-
-        // //     marketData.forEach(value => {
-        // //         console.log(value);
-        // //         // Your code for each filtered element goes here
-        // //     });
-        // // }
-
-
-
-
-        //     console.log('Received marketWatch event with data:', marketData);
-        //     // Handle market data received from the server
-        //     // ...
-        //   });
-
-        // Close the connection (optional)
-        // socket.close();
     </script>
 @endsection

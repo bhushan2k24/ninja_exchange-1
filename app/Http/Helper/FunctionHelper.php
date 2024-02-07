@@ -182,7 +182,7 @@ function createDatatableFormFilter($formArray = [])
                 {
                     $html .='
                     <div class="col col-md-'.(!empty($value['grid']) ? $value['grid'] : '12').' mt-2   '.(!empty($value['outer_div_classes']) ? $value['outer_div_classes'] : '').' ">
-                    <a href="javascript:void(0);" id="'.$value['name'].'" class="btn btn-outline-primary  w-100 waves-effect waves-float waves-light '.(!empty($value['extra-class']) ? $value['extra-class'] : '').' '.$element_extra_classes.'" name="'.$value['name'].'" >'.$value['label'].'</a>
+                    <a href="javascript:void(0);"  id="'.$value['name'].'" class="btn btn-outline-primary w-100 waves-effect waves-float waves-light '.(!empty($value['extra-class']) ? $value['extra-class'] : '').' '.$element_extra_classes.'" name="'.$value['name'].'" >'.$value['label']. '</a>
                     </div>
                     ';
                     continue;
@@ -316,8 +316,8 @@ function sideContentData($array = [])
                     'icon'=>'circle',
                 ],
                 [
-                    'label'=>'traders',
-                    'link'=>'traders',
+                    'label'=>'trades',
+                    'link'=>'view.trades',
                     'icon'=>'circle',
                 ],
                 [

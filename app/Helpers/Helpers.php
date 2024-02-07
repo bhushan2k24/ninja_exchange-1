@@ -142,11 +142,5 @@ class Helpers
     }
 
 
-    public function getUserMargin($user_id='1',$margin_type='intraday')
-    {
-        if($margin_type=='intraday')
-            return '500';
-
-        return '60';    
-    }   
+     
 }

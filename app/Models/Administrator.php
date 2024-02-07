@@ -24,7 +24,7 @@ class Administrator extends Authenticatable
         'master_account_type_ids' => 'array'
     ];
     protected $hidden = ['password','usercode','registered_ip','mobile','email','roles','remaining_master_limit']; 
-    protected $appends = ['user_parent','user_broker','formatted_market_data','remaining_master_limit'];   
+    protected $appends = ['user_delivery_multiplication','user_intraday_multiplication','user_parent','user_broker','formatted_market_data','remaining_master_limit'];   
  
     // Accessor for getting the parent name
     public function getUserParentAttribute()
@@ -34,6 +34,17 @@ class Administrator extends Authenticatable
         // Return the parent name if found, otherwise return null
         return $parent ? $parent : null;
     }
+
+    protected function getUserIntradayMultiplicationAttribute() {
+        $intraday_multi = $this->parent()->value('max_intraday_multiplication');        
+        return $intraday_multi<=0 ? 1 : $intraday_multi;
+    }
+
+    protected function getUserDeliveryMultiplicationAttribute() {
+        $intraday_multi = $this->parent()->value('max_delivery_multiplication');        
+        return $intraday_multi<=0 ? 1 : $intraday_multi;
+    }
+
 
     // Accessor for getting the parent name
     public function getUserBrokerAttribute()

@@ -114,13 +114,16 @@ class TradingController extends Controller
     #Get With Ajax 
 
     public function getwatchlistdata(Request $request){
-        $plMarketValue = $request->input('plMarketValue');
+        $TradingSymbol = $request->input('TradingSymbol');
+        
     
 
         $data = DB::table('nex_watchlists')
         ->join('nex_scripts','nex_scripts.id','=','nex_watchlists.script_id')
         ->select('nex_watchlists.*','nex_scripts.script_quantity','nex_scripts.is_ban')
-        ->where('watchlist_script_extension', $plMarketValue)->orderBy('id','DESC')->first();
+        ->where('watchlist_script_extension', $TradingSymbol)->where('user_id',Auth::id())->orderBy('id','DESC')->first();
+
+
         return successResponse(['Data' => $data]);
     }
     
@@ -192,32 +195,44 @@ class TradingController extends Controller
         }
 
         $user_id = $request->client == '' ? Auth::id() : $request->client;
-        $created_by = Auth::id();      
+        $created_by = Auth::id();     
+        
+        
+        $updateFields = (!empty($request->id)&& $request->id>0) ? 
+        [
+            'trade_quantity' => $request->has('quantity') ? $request->quantity : 0,
+            'trade_lot' => $request->has('lot') ? $request->lot : 0,
+            'trade_price' => $request->has('price') ? $request->price :0,
+        ]:
+        [
+            'user_id' => $user_id,
+            'created_by' => Auth::id(),
+            'script_expires_id' => $request->has('script_expires_id') ? $request->script_expires_id : 0,
+            'trade_bidrate' => $request->has('BuyPrice') ? $request->BuyPrice : 0,
+            'trade_askrate' => $request->has('SellPrice') ? $request->SellPrice : 0,
+            'trade_ltp' => $request->has('LastTradePrice') ? $request->LastTradePrice : 0,
+            'trade_change' => $request->has('PriceChangePercentage') ? $request->PriceChangePercentage : 0,
+            'trade_netchange' => $request->has('PriceChange') ? $request->PriceChange : 0,
+            'trade_high' => $request->has('High') ? $request->High : 0,
+            'trade_low' => $request->has('Low') ? $request->Low : 0,
+            'trade_open' => $request->has('Open') ? $request->Open : 0,
+            'trade_close' => $request->has('Close') ? $request->Close : 0,
+            'trade_type' => $request->has('tradeBuySell') ? $request->tradeBuySell : '',
+            'trade_order_type' => '', 
+            'trade_reference_id' => $request->has('script_extension') ? $request->script_extension : 0,
+            'user_ip' => $request->getClientIp(),
 
-        $nex_trade = Nex_trade::Create( 
-            [
-                'user_id'=>$user_id,
-                'created_by'=>$created_by,
-                'script_expires_id'=>$request->script_expires_id,
-                'trade_bidrate' => $request->BuyPrice,
-                'trade_askrate' => $request->SellPrice,
-                'trade_ltp' => $request->LastTradePrice,
-                'trade_change'=>$request->PriceChangePercentage,
-                'trade_netchange' => $request->PriceChange,
-                'trade_high' => $request->High,
-                'trade_low' => $request->Low,
-                'trade_open' => $request->Open,
-                'trade_close' => $request->Close,
-                'trade_quantity' => $request->quantity,
-                'trade_lot' => $request->lot,
-                'trade_price' => $request->price,
-                'trade_type' => $request->tradeBuySell,
-                'trade_order_type' => '',
-                'trade_reference_id' => $request->script_extension,
-                'user_ip' => $request->getClientIp()
+            'trade_quantity' => $request->has('quantity') ? $request->quantity : 0,
+            'trade_lot' => $request->has('lot') ? $request->lot : 0,
+            'trade_price' => $request->has('price') ? $request->price : 0,
+        ];
+        
 
-            ]
-        );
+
+             $nex_trade = Nex_trade::updateOrCreate( 
+            ['id' => $request->id],
+            $updateFields);
+        
 
             $transactionType = ($request->tradeBuySell === 'buy') ? 'debit' : 'credit';
             $walletAmount = ($request->tradeBuySell === 'buy') ? -abs($nex_trade['trade_price']) : abs($nex_trade['trade_price']);
@@ -230,8 +245,8 @@ class TradingController extends Controller
             ];
 
             Nex_wallet::create($walletData);
-
-            return successResponse(['Message' => 'Success!', 'Data' => [], 'Redirect' => route('view.watchlist')]);
+            
+            return successResponse(['Message' => 'Success!', 'Data' => [], 'Redirect' => route((!empty($request->id)&& $request->id>0)?'view.trades':'view.watchlist')]);
     }
 
     #WatchList Modules Stop
@@ -338,6 +353,18 @@ class TradingController extends Controller
                     'grid'=>2,
                     'data'=>typeData('order')
                 ],
+                [
+                    'tag'=>'input',
+                    'type'=>'reset',
+                    'value'=>'Filter Reset',
+                    'label'=>'',
+                    'name'=>'Reset Filter',
+                    'validation'=>'',
+                    'grid'=>2,
+                    'data'=>[],
+                    'outer_div_classes'=>'mb-0',
+                    'element_extra_classes'=>'btn btn-outline-secondary mt-2 btn-sm'
+                ],
             ],
         ];
         return view('trading.traders', $file);
@@ -349,8 +376,8 @@ class TradingController extends Controller
     public function trades_paginate_data(Request $request)
     {
         if ($request->ajax()) {            
-            $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','administrators.*','nex_script_expires.market_name','nex_script_expires.script_trading_symbol');
-            $thead = ['D','CLIENT','MARKET','SCRIPT',"B/S",'ORDER TYPE','LOT','QTY','ORDER PRICE','STATUS','"USER IP','UPDATED AT','ACTION'];
+            $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','nex_trades.id as trade_id','nex_trades.updated_at as date','administrators.*','nex_script_expires.market_name','nex_script_expires.script_trading_symbol');
+            $thead = ['D','CLIENT','MARKET','SCRIPT',"B/S",'ORDER TYPE','LOT','QTY','ORDER PRICE','STATUS','USER IP','UPDATED AT','ACTION'];
             if(!empty($request->market_name))
                 $Data->where('market_id','=',$request->input('market_name'));
             
@@ -376,12 +403,17 @@ class TradingController extends Controller
                     $data->trade_quantity,
                     $data->trade_price,
                     ucwords($data->trade_status),
-                    $data->last_login_ip,
-                    $data->updated_at,
-                    '<a href="javascript:void(0);" class="avatar avatar-status bg-light-danger delete_record" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete" deleteto="'.encrypt_to('nex_trades').'/'.encrypt_to($data->id).'">
+                    $data->user_ip,
+                    $data->date,
+                    '<a href="javascript:void(0);" class="avatar avatar-status bg-light-danger delete_record" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete" deleteto="'.encrypt_to('nex_trades').'/'.encrypt_to($data->trade_id).'">
                     <span class="avatar-content">
                         <i data-feather=\'trash-2\' class="avatar-icon"></i>
                     </span>
+                    </a>
+                    <a href="javascript:void(0);" class="avatar avatar-status bg-light-primary edit2-button openmodal-ajaxModel" recordof="getsingletrade/'.encrypt_to($data->trade_id).'" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit" id="'.$data->trade_id.'">
+                        <span class="avatar-content">
+                            <i data-feather=\'edit\' class="avatar-icon"></i>
+                        </span>
                     </a>'
                  
                     
@@ -392,6 +424,19 @@ class TradingController extends Controller
           return view('datatable.datatable', compact('tbody','thead'))->render();
         }     
     }
+
+    public function getSingleTrade(Request $request)
+    {
+
+        $data= DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','administrators.username','administrators.usercode','nex_script_expires.market_name','nex_script_expires.script_trading_symbol')->where('nex_trades.id',decrypt_to($request->id))->first();
+
+        if($data);
+            return successResponse(['Message' => 'Record Fetched Successfully!','Data'=>$data]);
+
+        return faildResponse(['Message' => 'Something went wrong!']);
+
+    }
+    
     // ---------------
 
     // portfolio module ---------------
@@ -400,7 +445,7 @@ class TradingController extends Controller
         $file['title'] = 'portfolio/position';
         $file['portfolioFormData'] = [
             'name'=>'watchlist-form',
-            'action'=>'',
+            'action'=>route('portfolio-paginate-data'),
             'btnGrid'=>2,
             'submit'=>'find orders',
             'fieldData'=>[
@@ -443,7 +488,7 @@ class TradingController extends Controller
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'market',
+                    'label'=>'Market',
                     'name'=>'market_id',
                     'validation'=>'',
                     'grid'=>2,
@@ -452,7 +497,7 @@ class TradingController extends Controller
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'script',
+                    'label'=>'Script',
                     'name'=>'script_id',
                     'validation'=>'',
                     'grid'=>2,
@@ -461,7 +506,7 @@ class TradingController extends Controller
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'master',
+                    'label'=>'Master',
                     'name'=>'master_id',
                     'validation'=>'',
                     'grid'=>2,
@@ -483,7 +528,7 @@ class TradingController extends Controller
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'client',
+                    'label'=>'Client',
                     'name'=>'client_id',
                     'validation'=>'',
                     'grid'=>2,
@@ -492,7 +537,7 @@ class TradingController extends Controller
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'broker',
+                    'label'=>'Broker',
                     'name'=>'borker_id',
                     'validation'=>'',
                     'grid'=>2,
@@ -501,15 +546,112 @@ class TradingController extends Controller
                 [
                     'tag'=>'input',
                     'type'=>'date',
-                    'label'=>'expire date',
+                    'label'=>'Expire Date',
                     'name'=>'expire_date',
                     'validation'=>'',
                     'grid'=>2,
                     'data'=>[]
                 ],
+                [
+                    'tag'=>'input',
+                    'type'=>'reset',
+                    'value'=>'Filter Reset',
+                    'label'=>'',
+                    'name'=>'Reset Filter',
+                    'validation'=>'',
+                    'grid'=>2,
+                    'data'=>[],
+                    'outer_div_classes'=>'mb-0',
+                    'element_extra_classes'=>'btn  btn-outline-secondary  mt-2 btn-sm'
+                ],
+                // [
+                //     'tag'=>'button',
+                //     'type'=>'button',
+                //     'value'=>'rolloverall',
+                //     'label'=>'Roll Over All',
+                //     'name'=>'rolloverall',
+                //     'validation'=>'',
+                //     'grid'=>2,
+                //     'data'=>[],
+                //     'outer_div_classes'=>'mb-0',
+                //     'element_extra_classes'=>'btn btn-success'
+                // ],
+                // [
+                //     'tag'=>'button',
+                //     'type'=>'button',
+                //     'value'=>'closeposition',
+                //     'label'=>'Close Position',
+                //     'name'=>'closeposition',
+                //     'validation'=>'',
+                //     'grid'=>2,
+                //     'data'=>[],
+                //     'outer_div_classes'=>'mb-0',
+                //     'element_extra_classes'=>'btn btn-danger '
+                // ],
+                // [
+                //     'tag'=>'button',
+                //     'type'=>'button',
+                //     'value'=>'rolloverall',
+                //     'label'=>'Roll Over All',
+                //     'name'=>'rolloverall',
+                //     'validation'=>'',
+                //     'grid'=>2,
+                //     'data'=>[],
+                //     'outer_div_classes'=>'mb-0',
+                //     'element_extra_classes'=>'btn btn-success'
+                // ],
             ],
         ];
-        return view('/trading/portfolio', $file);
+        return view('trading.portfolio', $file);
+    }
+
+
+
+
+    public function portfolio_paginate_data(Request $request)
+    {
+        if ($request->ajax()) {            
+            $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','administrators.*','nex_script_expires.market_name','nex_script_expires.script_trading_symbol','nex_script_expires.expiry_date');
+            $thead = ['MARKET','CLIENT','SCRIPT','T. BUY Q','BUY A. P.','T. SELL Q','SELL A. P.','NET Q','A/B P.','MTM','AUTO CLOSE','ACTION'];
+            if(!empty($request->market_name))
+                $Data->where('market_id','=',$request->input('market_name'));
+            
+            if(!empty($request->search))
+            {
+                $Data->where(function ($query) use ($request) {
+                    $query->where('script_name','LIKE','%'.$request->search."%")->orWhere('market_name','LIKE','%'.$request->search."%")->orWhere('updated_at','LIKE','%'.$request->search."%");
+                });
+            }
+            $tbody = $Data->paginate(10);
+            // dd($tbody);
+            $tbody_data = $tbody->items();
+            foreach ($tbody_data as $key => $data) {
+                $tbody_data[$key] = 
+                [
+                    $data->market_name,
+                    $data->usercode,
+                    $data->script_trading_symbol,
+                    $data->trade_quantity,
+                    '0',
+                    '0',
+                    '0',
+                    '0',
+                    '0',
+                    '0',
+                    $data->expiry_date,
+                    '<a href="javascript:void(0);" class="avatar avatar-status bg-light-danger delete_record" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete" deleteto="'.encrypt_to('nex_trades').'/'.encrypt_to($data->id).'">
+                    <span class="avatar-content">
+                        <i data-feather=\'trash-2\' class="avatar-icon"></i>
+                    </span>
+                    </a>'
+                 
+                    
+                ];
+          }
+          $tbody->setCollection(new Collection($tbody_data));
+
+          return view('datatable.datatable', compact('tbody','thead'))->render();
+        }     
     }
     // ---------------
 

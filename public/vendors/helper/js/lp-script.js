@@ -52,6 +52,13 @@ function setMarketValues(marketData) {
                 maximumFractionDigits: 2
             }));
 
+            $("input[pl-"+opt_value+"="+InstrumentIdentifier+"]").val((marketData.data[opt_value])
+            .toLocaleString('en-US', {
+                style: 'decimal',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }));
+
             if (['BuyPrice', 'SellPrice', 'LastTradePrice'].indexOf(opt_value) !== -1) {
 
                 var nowval = $('.' + Exchange + InstrumentIdentifier + opt_value).html();

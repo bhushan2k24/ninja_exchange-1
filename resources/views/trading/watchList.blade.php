@@ -325,20 +325,23 @@
         $(document).ready(function() {
             $('.bidclick').on('click', function () {
                 $('#tradeSell').prop('checked', true);
-                $('#tradeSell').change();
-
-                   
+                
+                $('.scriptPriceCalc').removeAttr('pl-SellPrice','');
+                $('.scriptPriceCalc').attr('pl-BuyPrice','');
+                $('#tradeSell').change();                   
             });
 
             $('.askclick').on('click', function () {
                 $('#tradeBuy').prop('checked', true);
+                
+                $('.scriptPriceCalc').removeAttr('pl-BuyPrice','');
+                $('.scriptPriceCalc').attr('pl-SellPrice','');
+
                 $('#tradeBuy').change();
                    
             });
 
             $('input[name="tradeBuySell"]').change(function() {
-
-
                 var outerDiv = $(this).closest('.offcanvas');
                 if ($(this).val() == 'buy') {
                     outerDiv.removeClass('offcanvas-danger')
@@ -363,18 +366,16 @@
             $('.open-watchlistoffcanvas').on('click', function() {
 
 
-                var plMarketValue = $(this).attr('pl-market');
+                var TradingSymbol = $(this).attr('pl-market');
 
                 $.ajax({
                     url: '{{ route('get.watchlist.ajax') }}',
                     method: 'POST',
                     data: {
-                        plMarketValue: plMarketValue
+                        TradingSymbol: TradingSymbol
                     },
                     success: function(response) {
                         console.log(response);
-
-
                         if (response.Status == 200) {
 
                             if (response.Data.is_ban == 'yes') {
@@ -384,11 +385,16 @@
                                         closeButton: true,
                                         tapToDismiss: false
                                     });
-
-                            } else {
-                                $('#offcanvasBottom').offcanvas('toggle');
-
+                                return false;    
                             }
+
+                            $('#offcanvasBottom').offcanvas('toggle');  
+                            
+                            var scriptQuantity = response.Data.script_quantity;                            
+                            var scriptExpireId = response.Data.script_expires_id;
+                            var tradingSymbol = response.Data.watchlist_trading_symbol;
+                            var lot = 1; 
+
 
                             var Options = ['BuyPrice', 'SellPrice', 'Open', 'LastTradePrice',
                                 'High', 'Low', 'Close',
@@ -398,66 +404,61 @@
 
                             Options.forEach(opt_value => {
                                 var curValue;
-
-                                if (opt_value === 'TradingSymbol') {
-                                    curValue = tradingSymbol;
-                                } else if (opt_value === 'Quantity') {
-                                    curValue = scriptQuantity;
-                                } else {
-                                    curValue = $('.' + '' + plMarketValue + opt_value)
-                                        .html();
-                                }
+                                                                
+                                curValue = (opt_value !== 'TradingSymbol' &&  opt_value !== 'Quantity')?
+                                $('.' + '' + TradingSymbol + opt_value).html():(opt_value == 'TradingSymbol'?TradingSymbol:scriptQuantity);
 
                                 $("[pl-" + opt_value + "]").attr("pl-" + opt_value,
-                                    plMarketValue);
-                                $("[pl-" + opt_value + "=" + plMarketValue + "]").html(
+                                TradingSymbol);
+                                $("[pl-" + opt_value + "=" + TradingSymbol + "]").html(
                                     curValue);
 
-                                       // Create a hidden input field for each value
-                                        $('<input>').attr({
-                                            type: 'hidden',
-                                            name: opt_value,
-                                            value: curValue
-                                        }).appendTo('form');
+                                $('#offcanvasBottom form input[name="'+opt_value+'"]').remove();
+                                // Create a hidden input field for each value
+                                $('<input>').attr({
+                                    type: 'hidden',
+                                    name: opt_value,
+                                    value: curValue
+                                }).appendTo('#offcanvasBottom form');
                             });
 
-
-                            var scriptQuantity = response.Data.script_quantity;
-                            var scriptExpireId = response.Data.script_expires_id;
-                            $('#script_expires_id').val(scriptExpireId);
-                            var tradingSymbol = response.Data.watchlist_trading_symbol;
+                            $('.scriptQuantityval').val(lot * scriptQuantity);
+                            $('#script_expires_id').val(scriptExpireId);                            
                             $('.scriptSymbol').html(tradingSymbol);
-                            
-                                var lot = '1'; 
-                                $('.scriptLot').val(lot);
-                                $('.scriptQuantityval').val(lot * scriptQuantity);
-
-                                var bidvalue = $('.fw-bo[pl-BuyPrice]').text();
-                                bidvalue = bidvalue.replace(',', '');
-                                var askvalue = $('.fw-bolder[pl-SellPrice]').text();
-                                askvalue = askvalue.replace(',', '');
-
-                               
-                                var scriptPrice;
-
-                                if ($('#tradeSell').is(':checked')) {
-                                        scriptPrice = lot*parseFloat(bidvalue);
-                                    } else {
-                                        scriptPrice = lot*parseFloat(askvalue);
-                                }
-
-                                var formattedScriptPrice = scriptPrice.toFixed(2);
-                                $('.scriptPriceCalc').val(formattedScriptPrice);
+                            $('.scriptLot').val(lot);
+                          
+                            var bidvalue = $($('[pl-BuyPrice]')[0]).text().replace(/,/g, '');
+                            var askvalue = $($('[pl-SellPrice]')[0]).text().replace(/,/g, '');
+                                                    
+                            var scriptPrice = ($('[name="tradeBuySell"]:checked').val()=='sell') ?  parseFloat(bidvalue).toFixed(2) : parseFloat(askvalue).toFixed(2);
+                         
+                            // var formattedScriptPrice = scriptPrice.toFixed(2);
+                            $('.scriptPriceCalc').val(scriptPrice);
  
                         }
                     },
-
                     error: function(error) {
                         console.error('Error:', error);
                     }
                 });
             });
         });
+        $(document).on('keyup','#offcanvasBottom form  [name="lot"],#offcanvasBottom form  [name="quantity"]',
+            function(e) {
+                var target_name = e.target.name;
+                console.log(target_name);
+
+                var lot  = $('#offcanvasBottom form  [name="lot"]').val();
+                var Quantity  = $('#offcanvasBottom form  [name="Quantity"]').val();
+                var quantity  = $('#offcanvasBottom form  [name="quantity"]').val();
+
+                console.log((quantity/Quantity));
+                if(target_name=='quantity')
+                    $('#offcanvasBottom form  [name="lot"]').val((quantity/Quantity));
+                else
+                $('#offcanvasBottom form  [name="quantity"]').val(quantity*lot)
+
+            });
     </script>
 
 

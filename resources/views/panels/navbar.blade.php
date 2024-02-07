@@ -55,7 +55,7 @@
     </ul>
       <div class="avatar bg-light-success rounded me-1">
           <div class="avatar-content ">
-              <i data-feather="trending-up" class="avatar-icon font-medium-3 NFOBANKNIFTY-IPriceChangeicon"></i>
+              <i data-feather="trending-up" class="avatar-icon font-medium-3 BANKNIFTY-IPriceChangeicon"></i>
           </div>
       </div>
       <div class="user-nav d-sm-flex d-none">
@@ -67,7 +67,7 @@
 
       <div class="avatar bg-light-danger rounded me-1 ms-2">
         <div class="avatar-content ">
-            <i data-feather="trending-down" class="avatar-icon font-medium-3 NFONIFTY-IPriceChangeicon"></i>
+            <i data-feather="trending-down" class="avatar-icon font-medium-3 NIFTY-IPriceChangeicon"></i>
         </div>
       </div>
       <div class="user-nav d-sm-flex d-none">

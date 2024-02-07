@@ -26,36 +26,38 @@ class Administrator extends Authenticatable
     protected $hidden = ['password','usercode','registered_ip','mobile','email','roles','remaining_master_limit']; 
     protected $appends = ['user_delivery_multiplication','user_intraday_multiplication','user_parent','user_broker','formatted_market_data','remaining_master_limit'];   
  
-    // Accessor for getting the parent name
+    # Accessor for getting the parent name
     public function getUserParentAttribute()
     {
-        // Use the 'parent_id' to find the parent user
+        # Use the 'parent_id' to find the parent user
         $parent = $this->parent()->first();
-        // Return the parent name if found, otherwise return null
+        # Return the parent name if found, otherwise return null
         return $parent ? $parent : null;
     }
 
+    # Get User Intraday Multiplication from parent(master) 
     protected function getUserIntradayMultiplicationAttribute() {
         $intraday_multi = $this->parent()->value('max_intraday_multiplication');        
         return $intraday_multi<=0 ? 1 : $intraday_multi;
     }
 
+    # Get User Delivery Multiplication from parent(master) 
     protected function getUserDeliveryMultiplicationAttribute() {
         $intraday_multi = $this->parent()->value('max_delivery_multiplication');        
         return $intraday_multi<=0 ? 1 : $intraday_multi;
     }
 
 
-    // Accessor for getting the parent name
+    # Accessor for getting the parent name
     public function getUserBrokerAttribute()
     {
-        // Use the 'parent_id' to find the parent user
+        # Use the 'parent_id' to find the parent user
         $broker = $this->userBroker()->first();
-        // Return the parent name if found, otherwise return null
+        # Return the parent name if found, otherwise return null
         return $broker ? $broker : null;
     }
 
-    // Accessor to get the Remaining Master Limit
+    # Accessor to get the Remaining Master Limit
     public function getRemainingMasterLimitAttribute()
     {
       $TotalMasterCreated = $this->hasMany(Administrator::class, 'parent_id', 'id')

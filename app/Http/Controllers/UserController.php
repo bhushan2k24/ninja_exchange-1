@@ -160,6 +160,7 @@ class UserController extends Controller
     // user form module ---------------
     public function form($id = 0)
     {
+        
         // if(Auth::user()->hasRole(['broker','user']))
         //     abort(404);
 

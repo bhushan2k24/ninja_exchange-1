@@ -58,7 +58,7 @@
               @endif
               <div class="mb-1 col-12 col-md-3">
                 <label class="form-label">Name</label>                  
-                <input type="name" id="name" placeholder="name" class="form-control" name="name"  value="{{$isedit?$userData->name:''}}">
+                <input type="name" id="name" placeholder="Name" class="form-control" name="name"  value="{{$isedit?$userData->name:''}}">
               </div>
               <input type="hidden" id="id" name="id" value="{{$id}}">
               {{-- <div class="mb-1 col col-md-3">
@@ -231,6 +231,55 @@
             </div>
           </div>
         </div>
+
+        <div class="card master_section">
+          <div class="card-header">
+            <h4 class="card-title">Additional Details</h4>
+          </div>
+          <div class="card-body">
+            <div class="col-12 mb-2 border rounded pb-1">
+              <h5 class="fw-bolder border-bottom pb-50 m-1">MCXFUT Market</h5>
+              @php($mcxmarketData = marketData(0,0,0,'MCXFUT'))             
+              @if(!empty($mcxmarketData))
+                <input type="hidden" id="market_type_{{$mcxmarketData['id']}}" name="market_type_value" value="{{$mcxmarketData['id']}}">
+                <div class="m-25 col-12 row">
+                    <div class="mb-1 col-12 col-md-3">
+                      <label class="form-label" for="commission_type">Commission Type</label>
+                      <select name="commission_type" class="form-control form-select ">
+                        <option value="">Select Commission Type</option>
+                        <option value="script_wise">Script Wise</option>
+                        <option value="same_for_all">Same For All</option>                        
+                      </select>
+                      <small class="error commission_type-error"></small>
+                    </div>
+
+                    <div class="mb-1 col-12 col-md-3">
+                      <label class="form-label" for="brokerage_type">Brokerage Type</label>
+                      <select name="brokerage_type" class="form-control form-select ">
+                        <option value="">Select Brokerage Type</option>
+                        <option value="amount_wise">Amount Wise</option>
+                        <option value="lot_wise">Lot Wise</option>                        
+                      </select>
+                      <small class="error brokerage_type-error"></small>
+                    </div>
+
+                    <div class="mb-1 col-12 col-md-3">
+                        <label class="form-label">Default Intraday Multiplication</label>                  
+                        <input type="number" placeholder="Default Intraday Multiplication" class="form-control" name="default_intraday_multiplication" id="default_intraday_multiplication" >
+                    </div>
+      
+                    <div class="mb-1-12 col-12 col-md-3">
+                      <label class="form-label">Default Delivery Multiplication</label>                  
+                      <input type="number" placeholder="Default Delivery Multiplication" class="form-control" name="default_delivery_multiplication" id="default_delivery_multiplication" >
+                    </div>
+                </div>
+
+                
+              @endif
+
+            </div>
+          </div>
+        </div>
         
         <div class="card master_section {{(!($isedit && $userData->hasRole('master')) ? "hidden" :'' )}}">
           <div class="card-header">
@@ -269,6 +318,8 @@
                       <small class="error market_type-error"></small>
                     <?php
                     $marketData = marketData(0,1);
+                   
+                    
                     $UserMarketData = $isedit?$userData->formattedMarketData:[];
                     
                     foreach($marketData as $key => $value)
@@ -445,11 +496,7 @@
     $(document).on('change', '[name=user_type]', function(event) { 
 
       var value = $(this).val();
-      // var values = [];
-
-
       $.each($("[name=user_type]").prop("options"), function(i, opt) {
-
         if(opt.value.length <= 0)
           return;
         if(opt.value == value)
@@ -461,8 +508,7 @@
         {
           $('.'+opt.value+'_section').addClass('hidden');
           DisableEnableFields($('.'+opt.value+'_section'));
-        }
-         
+        }        
 
 
           // if(opt.value.length > 0)

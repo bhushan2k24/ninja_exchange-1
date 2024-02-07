@@ -14,12 +14,14 @@ function getFormContentData($form_name = 'login-form')
 #---------------
 
 #function for get market data ---------------
-function marketData($id=0,$with_non_trading_market=0,$only_stock_trading=0)
+function marketData($id=0,$with_non_trading_market=0,$only_stock_trading=0,$market_name='')
 {
 
     $get_market = Nex_Market::select('*')->addSelect('market_name as label', 'id as value')->where('market_status','active');
     if($id>0)
-        return $get_market->where('id',$id)->first();
+        return $get_market->where('id',$id)->first()->toArray();
+    if($market_name!='')
+        return $get_market->where('market_name',$market_name)->first()->toArray();
    
     if($only_stock_trading>0)
         return $get_market->where('market_type','stock_trading')->get()->toArray();

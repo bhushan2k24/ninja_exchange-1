@@ -89,8 +89,6 @@ class MaxQuantityController extends Controller
         $levelId = $request->input('level_id');
 
         $condition=$levelId > 0 ? '=' : '>';
-        // $scriptData = Nex_script::where('market_id', $condition, $marketId)->limit(10) 
-        // ->get();
         $max_quantity_data = nex_max_quantity::where('level_id', $condition,$levelId)->limit(10)->get();
         return response()->json($max_quantity_data);
     }

@@ -28,7 +28,11 @@ class Nex_trade extends Model
         'trade_order_type',
         'trade_status',
         'trade_reference_id',
-        'user_ip'
+        'user_ip',
+        'trade_multiplication_value',
+        'trade_order_price',
+        'trade_multiplication_type',
+
 
     ];
 }

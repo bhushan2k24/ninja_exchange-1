@@ -66,7 +66,7 @@
                                                 @if ($w_key == 0 || ($w_key > 0 && $watchlist_data[$w_key - 1]->market_id != $watch_scr->market_id))
                                                     <thead>
                                                         <tr>
-                                                            <th>{{ $watch_scr->watchlist_market_name }}</th>
+                                                            <th >{{ $watch_scr->watchlist_market_name }}</th>
                                                             <th>BID RATE</th>
                                                             <th>ASK RATE</th>
                                                             <th>LTP</th>
@@ -83,10 +83,10 @@
 
                                                 <tr>
                                                     <th>{{ $symbol_name }}</th>
-                                                    <td pl-market="{{ $symbol }}"
+                                                    <td pl-marketname="{{ $watch_scr->watchlist_market_name }}" pl-market="{{ $symbol }}"
                                                         class="{{ $market . $symbol . 'BuyPrice' }} cursor-pointer open-watchlistoffcanvas bidclick">
                                                         00.00</td>
-                                                    <td pl-market="{{ $symbol }}"
+                                                    <td pl-marketname="{{ $watch_scr->watchlist_market_name }}" pl-market="{{ $symbol }}"
                                                         class="{{ $market . $symbol . 'SellPrice' }} cursor-pointer open-watchlistoffcanvas askclick">
                                                         00.00</td>
                                                     <td class="{{ $market . $symbol . 'LastTradePrice' }}">00.00</td>
@@ -367,12 +367,15 @@
 
 
                 var TradingSymbol = $(this).attr('pl-market');
+                var TradingMarket = $(this).attr('pl-marketname');
+                
 
                 $.ajax({
                     url: '{{ route('get.watchlist.ajax') }}',
                     method: 'POST',
                     data: {
-                        TradingSymbol: TradingSymbol
+                        TradingSymbol: TradingSymbol,
+                        TradingMarket: TradingMarket
                     },
                     success: function(response) {
                         console.log(response);
@@ -393,20 +396,22 @@
                             var scriptQuantity = response.Data.script_quantity;                            
                             var scriptExpireId = response.Data.script_expires_id;
                             var tradingSymbol = response.Data.watchlist_trading_symbol;
+                            var tradingMarket = response.Data.market_name;
+                            console.log(tradingMarket);
                             var lot = 1; 
 
 
                             var Options = ['BuyPrice', 'SellPrice', 'Open', 'LastTradePrice',
                                 'High', 'Low', 'Close',
                                 'InstrumentIdentifier', 'PriceChange',
-                                'PriceChangePercentage', 'TradingSymbol', 'Quantity'
+                                'PriceChangePercentage', 'TradingSymbol', 'Quantity','TradingMarket'
                             ];
 
                             Options.forEach(opt_value => {
                                 var curValue;
                                                                 
                                 curValue = (opt_value !== 'TradingSymbol' &&  opt_value !== 'Quantity')?
-                                $('.' + '' + TradingSymbol + opt_value).html():(opt_value == 'TradingSymbol'?TradingSymbol:scriptQuantity);
+                                $('.' + '' + TradingSymbol + opt_value).html():(opt_value == 'TradingSymbol'?TradingSymbol:(opt_value == 'Quantity'?scriptQuantity:tradingMarket));
 
                                 $("[pl-" + opt_value + "]").attr("pl-" + opt_value,
                                 TradingSymbol);
@@ -421,6 +426,8 @@
                                     value: curValue
                                 }).appendTo('#offcanvasBottom form');
                             });
+
+                            $('.scriptQuantityval').prop('readonly',(tradingMarket!='NSEFUT'));
 
                             $('.scriptQuantityval').val(lot * scriptQuantity);
                             $('#script_expires_id').val(scriptExpireId);                            
@@ -451,13 +458,15 @@
                 var lot  = $('#offcanvasBottom form  [name="lot"]').val();
                 var Quantity  = $('#offcanvasBottom form  [name="Quantity"]').val();
                 var quantity  = $('#offcanvasBottom form  [name="quantity"]').val();
+                var tradingMarket  = $('#offcanvasBottom form  [name="tradingMarket"]').val();
 
                 console.log((quantity/Quantity));
-                if(target_name=='quantity')
-                    $('#offcanvasBottom form  [name="lot"]').val((quantity/Quantity));
-                else
-                $('#offcanvasBottom form  [name="quantity"]').val(quantity*lot)
 
+                if(target_name=='quantity' && tradingMarket!='NSEFUT')
+                    $('#offcanvasBottom form  [name="lot"]').val((quantity/Quantity));
+                else if(target_name=='lot')
+                    $('#offcanvasBottom form  [name="quantity"]').val(Quantity*lot);
+                
             });
     </script>
 

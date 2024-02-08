@@ -227,16 +227,4 @@ function get_levels($id = 0){
         return $get_levels->where('id',$id)->first();
     return $get_levels->get();
 } 
-
-function getUserMargin($user_id='1',$margin_type='intraday')
-{
-    $data=Administrator::where('id','user_id')->get();
-    $parent_data=$data->parent;
-    dd($parent_data);   
-
-    if($margin_type=='intraday')
-        return '500';
-
-    return '60';    
-} 
 ?>

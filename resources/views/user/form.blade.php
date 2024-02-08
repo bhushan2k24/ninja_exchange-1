@@ -232,46 +232,138 @@
           </div>
         </div>
 
-        <div class="card master_section">
-          <div class="card-header">
+        <div class="card master_section {{(!($isedit && $userData->hasRole('master')) ? "hidden" :'' )}}">
+          {{-- <div class="card-header">
             <h4 class="card-title">Additional Details</h4>
-          </div>
+          </div> --}}
           <div class="card-body">
-            <div class="col-12 mb-2 border rounded pb-1">
-              <h5 class="fw-bolder border-bottom pb-50 m-1">MCXFUT Market</h5>
-              @php($mcxmarketData = marketData(0,0,0,'MCXFUT'))             
+            <div class="col-12 border rounded pb-1">
+              <h5 class="fw-bolder border-bottom pb-50 m-1">MCXFUT Market <span class="mcx-user-brok-type-text"></span></h5>
+
+              @php($mcxmarketData = marketData(0,0,0,'MCXFUT'))                       
               @if(!empty($mcxmarketData))
                 <input type="hidden" id="market_type_{{$mcxmarketData['id']}}" name="market_type_value" value="{{$mcxmarketData['id']}}">
+                @php($marketName = $mcxmarketData['market_name'])  
                 <div class="m-25 col-12 row">
                     <div class="mb-1 col-12 col-md-3">
-                      <label class="form-label" for="commission_type">Commission Type</label>
-                      <select name="commission_type" class="form-control form-select ">
+                      <label class="form-label" for="user_mcx_commission_type">Commission Type</label>
+                      <select name="user_mcx_commission_type" class="form-control form-select ">
                         <option value="">Select Commission Type</option>
                         <option value="script_wise">Script Wise</option>
                         <option value="same_for_all">Same For All</option>                        
                       </select>
-                      <small class="error commission_type-error"></small>
+                      <small class="error user_mcx_commission_type-error"></small>
                     </div>
 
                     <div class="mb-1 col-12 col-md-3">
-                      <label class="form-label" for="brokerage_type">Brokerage Type</label>
-                      <select name="brokerage_type" class="form-control form-select ">
+                      <label class="form-label" for="usr_mcx_brokerage_type">Brokerage Type</label>
+                      <select name="usr_mcx_brokerage_type" class="form-control form-select ">
                         <option value="">Select Brokerage Type</option>
                         <option value="amount_wise">Amount Wise</option>
                         <option value="lot_wise">Lot Wise</option>                        
                       </select>
-                      <small class="error brokerage_type-error"></small>
+                      <small class="error usr_mcx_brokerage_type-error"></small>
                     </div>
 
-                    <div class="mb-1 col-12 col-md-3">
-                        <label class="form-label">Default Intraday Multiplication</label>                  
-                        <input type="number" placeholder="Default Intraday Multiplication" class="form-control" name="default_intraday_multiplication" id="default_intraday_multiplication" >
+                    <div class="col-12 col-md-6 row mcx-user-commission d-none">
+                      <div class="mb-1 col-12 col-md-6">
+                        <label class="form-label">{{$marketName}} Delivery Commission</label>  
+                        <div class="input-group input-width-drop-down">                
+                          <input type="number" placeholder="Enter {{$marketName}} Delivery Commission" class="form-control" name="mcx_user_delivery_commission" id="mcx_user_delivery_commission" >
+                          <select  name="mcx_user_delivery_commission_is_percentage" class="form-select waves-effect rounded-end" >
+                            <option value='1'>%</option>
+                            <option value='0'>₹</option>
+                          </select>
+                          <small class="error mcx_user_delivery_commission-error"></small>
+
+                        </div>
+                      </div>
+
+                      <div class="mb-1 col-12 col-md-6">
+                          <label class="form-label">{{$marketName}} Intraday Commission</label>                  
+                          <div class="input-group input-width-drop-down">  
+                            <input type="number" placeholder="Enter {{$marketName}} Intraday Commission" class="form-control" name="mcx_user_intraday_commission" id="mcx_user_intraday_commission" >
+                            <select  name="mcx_user_intraday_commission_is_percentage" class="form-select waves-effect rounded-end" >
+                              <option value='1'>%</option>
+                              <option value='0'>₹</option>
+                            </select>
+                            <small class="error mcx_user_intraday_commission-error"></small>
+                          </div>
+                      </div>  
+                  </div>
+
+                  <div class="col-12 col-md-6 row mcx-user-default-commission d-none">
+                    <div class="mb-1 col-12 col-md-6">
+                      <label class="form-label">Default Delivery Commission</label>
+                      <div class="input-group input-width-drop-down">
+
+                      <input type="number" placeholder="Default Delivery Commission" class="form-control" name="mcx_user_default_delivery_commission" id="mcx_user_default_delivery_commission" >
+
+                      <select  name="mcx_user_default_delivery_commission_is_percentage" class="form-select waves-effect rounded-end" >
+                        <option value='1'>%</option>
+                        <option value='0'>₹</option>
+                      </select>
+                      <small class="error mcx_user_default_delivery_commission-error"></small>
+                      </div>
                     </div>
-      
-                    <div class="mb-1-12 col-12 col-md-3">
-                      <label class="form-label">Default Delivery Multiplication</label>                  
-                      <input type="number" placeholder="Default Delivery Multiplication" class="form-control" name="default_delivery_multiplication" id="default_delivery_multiplication" >
+
+                    <div class="mb-1 col-12 col-md-6">
+                      <label class="form-label">Default Intraday Commission</label>
+                      <div class="input-group input-width-drop-down">
+
+                      <input type="number" placeholder="Default Intraday Commission" class="form-control" name="mcx_user_default_intraday_commission" id="mcx_user_default_intraday_commission" >
+
+                      <select  name="mcx_user_default_intraday_commission_is_percentage" class="form-select waves-effect rounded-end" >
+                        <option value='1'>%</option>
+                        <option value='0'>₹</option>
+                      </select>
+                      <small class="error mcx_user_default_intraday_commission-error"></small>
+                      </div>
                     </div>
+
+                </div>
+
+                  @php($scriptsData = scriptData($mcxmarketData['id']))
+                  <div class="row col-12 mcx-user-scripts-commission d-none">
+                    @foreach($scriptsData as $script)
+                    <div class="col-12 col-md-4 py-50">
+                      <div class="border rounded p-1"> 
+                      <h6 class=" fw-bolder fw-bolder border-bottom pb-25 ">{{$script['label']}}</h5>
+                        
+                        <div class="mb-1 col-12">
+                          <label class="form-label">{{$script['label']}} Delivery Commission</label>
+                          <div class="input-group input-width-drop-down">
+
+                          <input type="number" placeholder="{{$script['label']}} Delivery Commission" class="form-control" name="user_mcx_commission[{{$script['value']}}][delivery_commission]" id="user_mcx_delivery_commission" >
+
+                          <select  name="user_mcx_commission[{{$script['value']}}][delivery_is_percentage]" class="form-select waves-effect rounded-end" >
+                            <option value='1'>%</option>
+                            <option value='0'>₹</option>
+                          </select>
+                          <small class="error user_mcx_commission{{$script['value']}}delivery_commission-error"></small>
+                          </div>
+                        </div>
+
+                        <div class="mb-1 col-12">
+                          <label class="form-label">{{$script['label']}} Intraday Commission</label>
+                          <div class="input-group input-width-drop-down">
+
+                          <input type="number" placeholder="{{$script['label']}} Intraday Commission" class="form-control" name="user_mcx_commission[{{$script['value']}}][intraday_commission]" id="user_mcx_intraday_commission" >
+
+                          <select  name="user_mcx_commission[{{$script['value']}}][intraday_is_percentage]" class="form-select waves-effect rounded-end" >
+                            <option value='1'>%</option>
+                            <option value='0'>₹</option>
+                          </select>
+                          <small class="error user_mcx_commission{{$script['value']}}intraday_commission-error"></small>
+                          </div>
+                        </div>
+        
+                      </div>
+                    </div>
+                    @endforeach
+                  </div>
+
+
                 </div>
 
                 
@@ -641,6 +733,56 @@
 
   {{-- <script src="{{ asset(mix('js/scripts/forms/form-select2.js')) }}"></script> --}}
   <script src="{{ asset(mix('vendors/js/extensions/sweetalert2.all.min.js')) }}"></script>
+
+  <script>
+    $(document).on('change','[name="usr_mcx_brokerage_type"]',function(e) {
+      var usr_mcx_brokerage_type = $(e.target).val();
+      $('.mcx-user-brok-type-text').text((usr_mcx_brokerage_type!=''?(usr_mcx_brokerage_type=='amount_wise'?'(Amount  Wise)':'(Lot Wise)'):''));
+    });
+
+    $(document).on('change','[name="user_mcx_commission_type"]',function(e) {
+      var user_mcx_commission_type = $(e.target).val();
+      
+      if(user_mcx_commission_type=='same_for_all')
+      {
+        $('.mcx-user-scripts-commission').addClass('d-none');
+        $('.mcx-user-default-commission').addClass('d-none');
+        $('.mcx-user-commission').removeClass('d-none');
+      }
+      else if(user_mcx_commission_type=='script_wise')
+      {
+        $('.mcx-user-commission').addClass('d-none');
+        $('.mcx-user-default-commission').removeClass('d-none');
+        $('.mcx-user-scripts-commission').removeClass('d-none');
+      }
+      else
+      {
+        $('.mcx-user-commission').addClass('d-none');
+        $('.mcx-user-default-commission').addClass('d-none');
+        $('.mcx-user-scripts-commission').addClass('d-none');
+      }
+     
+    });
+
+    $(document).on('keyup change','[name="mcx_user_default_delivery_commission"],[name="mcx_user_default_intraday_commission"],[name="mcx_user_default_delivery_commission_is_percentage"],[name="mcx_user_default_intraday_commission_is_percentage"]',function(e) {
+
+      var default_delivery_commission = $('[name="mcx_user_default_delivery_commission"]').val();
+      var default_delivery_commission_is_per = $('  [name="mcx_user_default_delivery_commission_is_percentage"]').val();
+
+      var default_intraday_commission = $('[name="mcx_user_default_intraday_commission"]').val();
+      var default_intraday_commission_is_per = $('[name="mcx_user_default_intraday_commission_is_percentage"]').val();
+
+      $('.mcx-user-scripts-commission [name*="intraday_commission"] ').val(default_intraday_commission);
+      $('.mcx-user-scripts-commission [name*="intraday_is_percentage"] ').val(default_intraday_commission_is_per);
+
+      $('.mcx-user-scripts-commission [name*="delivery_commission"] ').val(default_delivery_commission);
+      $('.mcx-user-scripts-commission [name*="delivery_is_percentage"] ').val(default_delivery_commission_is_per);
+
+
+    });
+
+    
+  </script>
 
   <script>
   $(".select2-ajax-user_broker").select2({

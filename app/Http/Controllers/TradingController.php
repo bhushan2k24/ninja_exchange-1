@@ -120,7 +120,7 @@ class TradingController extends Controller
 
         $data = DB::table('nex_watchlists')
         ->join('nex_scripts','nex_scripts.id','=','nex_watchlists.script_id')
-        ->select('nex_watchlists.*','nex_scripts.script_quantity','nex_scripts.is_ban')
+        ->select('nex_watchlists.*','nex_scripts.script_quantity','nex_scripts.is_ban','nex_scripts.market_name')
         ->where('watchlist_script_extension', $TradingSymbol)->where('user_id',Auth::id())->orderBy('id','DESC')->first();
 
 
@@ -173,31 +173,37 @@ class TradingController extends Controller
     #Trade Store
     public function store_trade(Request $request)
     {
-        // dd($request->all());
         $validated = Validator::make($request->all(), [
             'lot' => 'required',
             'quantity' => 'required',
             'price' => 'required',
         ]);
 
+        $user_id = !Auth::user()->hasRole('user') ? $request->client : Auth::id();
+        $userDetails = Administrator::find($user_id);
+        $user_intraday_multi = $userDetails->user_intraday_multiplication;
+        $user_delivery_multi = $userDetails->user_delivery_multiplication;
+
+        $user_delivery_multi = $userDetails->user_delivery_multiplication;
+        $TradeLivePrice = $request->price?:0;
+        $TradeQuantity = $request->quantity?:1;
+        $TradeLot = $request->lot?:1;
+
+        $TradeIntradayPrice = ($TradeLivePrice*$TradeQuantity)/$user_intraday_multi;
+        $TradeDeliveryPrice = ($TradeLivePrice*$TradeQuantity)/$user_delivery_multi;
+
         if ($validated->fails()) 
             return faildResponse(['Message' => 'Validation Warning', 'Data' => $validated->errors()->toArray()]);
 
         if ($request->tradeBuySell === 'buy'){
 
-            $id = !Auth::guard('admin')->user()->hasRole('user') ? $request->client : Auth::id();
-
-
-            $totalWalletAmount = Nex_wallet::where('user_id', $id)->sum('wallet_amount');
-            if ($request->price > $totalWalletAmount) {
+            $TotalWalletAmount = Nex_wallet::where('user_id', $user_id)->sum('wallet_amount');
+            if ($TradeIntradayPrice > $TotalWalletAmount) {
                 return faildResponse(['Data'=>['price'=>['Insufficient Balance To Trade']],'Message'=>'Insufficient Balance To Trade']);
             }
         }
 
-        $user_id = $request->client == '' ? Auth::id() : $request->client;
-        $created_by = Auth::id();     
-        
-        
+   
         $updateFields = (!empty($request->id)&& $request->id>0) ? 
         [
             'trade_quantity' => $request->has('quantity') ? $request->quantity : 0,
@@ -218,24 +224,23 @@ class TradingController extends Controller
             'trade_open' => $request->has('Open') ? $request->Open : 0,
             'trade_close' => $request->has('Close') ? $request->Close : 0,
             'trade_type' => $request->has('tradeBuySell') ? $request->tradeBuySell : '',
-            'trade_order_type' => '', 
+            'trade_order_type' => 'market', 
             'trade_reference_id' => $request->has('script_extension') ? $request->script_extension : 0,
             'user_ip' => $request->getClientIp(),
 
             'trade_quantity' => $request->has('quantity') ? $request->quantity : 0,
             'trade_lot' => $request->has('lot') ? $request->lot : 0,
-            'trade_price' => $request->has('price') ? $request->price : 0,
+            'trade_price' => $request->has('price') ? $request->price :0,
+            'trade_order_price' => $TradeIntradayPrice ? $TradeIntradayPrice :0,
+            'trade_multiplication_value' => $user_intraday_multi ? $user_intraday_multi :0,
         ];
         
-
-
              $nex_trade = Nex_trade::updateOrCreate( 
             ['id' => $request->id],
             $updateFields);
-        
 
             $transactionType = ($request->tradeBuySell === 'buy') ? 'debit' : 'credit';
-            $walletAmount = ($request->tradeBuySell === 'buy') ? -abs($nex_trade['trade_price']) : abs($nex_trade['trade_price']);
+            $walletAmount = ($request->tradeBuySell === 'buy') ? -abs($nex_trade['trade_order_price']) : abs($nex_trade['trade_order_price']);
 
             $walletData = [
                 'user_id' =>  $user_id,
@@ -243,8 +248,7 @@ class TradingController extends Controller
                 'wallet_amount' => $walletAmount,
                 'wallet_transaction_id'=>rand(11111111,99999999)
             ];
-
-            Nex_wallet::create($walletData);
+            Nex_wallet::create($walletData); 
             
             return successResponse(['Message' => 'Success!', 'Data' => [], 'Redirect' => route((!empty($request->id)&& $request->id>0)?'view.trades':'view.watchlist')]);
     }
@@ -284,7 +288,7 @@ class TradingController extends Controller
                 [
                     'tag'=>'input',
                     'type'=>'date',
-                    'label'=>'trade after',
+                    'label'=>'Trade After',
                     'name'=>'trader_after',
                     'validation'=>'',
                     'grid'=>2,
@@ -293,7 +297,7 @@ class TradingController extends Controller
                 [
                     'tag'=>'input',
                     'type'=>'date',
-                    'label'=>'trade before',
+                    'label'=>'Trade Before',
                     'name'=>'trader_before',
                     'validation'=>'',
                     'grid'=>2,
@@ -302,16 +306,16 @@ class TradingController extends Controller
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'segment',
+                    'label'=>'Segment',
                     'name'=>'market_id',
                     'validation'=>'',
                     'grid'=>2,
-                    'data'=>marketData()
+                    'data'=>marketdata(0,0,1)
                 ],
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'script',
+                    'label'=>'Script',
                     'name'=>'script_id',
                     'validation'=>'',
                     'grid'=>2,
@@ -320,7 +324,7 @@ class TradingController extends Controller
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'broker',
+                    'label'=>'Broker',
                     'name'=>'borker_id',
                     'validation'=>'',
                     'grid'=>2,
@@ -329,7 +333,7 @@ class TradingController extends Controller
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'master',
+                    'label'=>'Master',
                     'name'=>'master_id',
                     'validation'=>'',
                     'grid'=>2,
@@ -338,7 +342,7 @@ class TradingController extends Controller
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'client',
+                    'label'=>'Client',
                     'name'=>'client_id',
                     'validation'=>'',
                     'grid'=>2,
@@ -347,7 +351,7 @@ class TradingController extends Controller
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'order type',
+                    'label'=>'Order Type',
                     'name'=>'order_type_id',
                     'validation'=>'',
                     'grid'=>2,
@@ -370,31 +374,49 @@ class TradingController extends Controller
         return view('trading.traders', $file);
     }
 
-
-
-
     public function trades_paginate_data(Request $request)
     {
-        if ($request->ajax()) {            
-            $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','nex_trades.id as trade_id','nex_trades.updated_at as date','administrators.*','nex_script_expires.market_name','nex_script_expires.script_trading_symbol');
-            $thead = ['D','CLIENT','MARKET','SCRIPT',"B/S",'ORDER TYPE','LOT','QTY','ORDER PRICE','STATUS','USER IP','UPDATED AT','ACTION'];
-            if(!empty($request->market_name))
-                $Data->where('market_id','=',$request->input('market_name'));
+        if ($request->ajax()) 
+        {            
+            $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','nex_trades.id as trade_id','nex_trades.updated_at as date','administrators.*','nex_script_expires.market_name','nex_script_expires.market_id','nex_script_expires.script_id','nex_script_expires.script_name','nex_script_expires.script_trading_symbol',DB::raw('(SELECT  sub_admin.name parent_name FROM administrators sub_admin  WHERE id=administrators.parent_id) parent_name'));
+        
+            $thead = ['D','TIME','CLIENT','MARKET','SCRIPT',"B/S",'ORDER TYPE','LOT','QTY','ORDER PRICE','STATUS','USER IP','UPDATED AT','ACTION'];
+
+            if(!empty($request->order_type))
+                $Data->where('trade_status','=',$request->input('order_type'));
+
+            if(!empty($request->market_id))
+                $Data->where('market_id','=',$request->input('market_id'));
+
+            if(!empty($request->script_id))
+                $Data->where('script_id','LIKE','%'.$request->script_name."%");
             
             if(!empty($request->search))
             {
                 $Data->where(function ($query) use ($request) {
-                    $query->where('script_name','LIKE','%'.$request->search."%")->orWhere('market_name','LIKE','%'.$request->search."%")->orWhere('updated_at','LIKE','%'.$request->search."%");
+                    $query->where('market_name', 'LIKE', '%' . $request->search . '%')
+                        ->orWhere('script_trading_symbol', 'LIKE', '%' . $request->search . '%')
+                        ->orWhere('usercode', 'LIKE', '%' . $request->search . '%')
+                        ->orWhere('trade_type', 'LIKE', '%' . $request->search . '%')
+                        ->orWhere('trade_order_type', 'LIKE', '%' . $request->search . '%')
+                        ->orWhere('trade_lot', 'LIKE', '%' . $request->search . '%')
+                        ->orWhere('trade_price', 'LIKE', '%' . $request->search . '%')
+                        ->orWhere('trade_status', 'LIKE', '%' . $request->search . '%')
+                        ->orWhere('user_ip', 'LIKE', '%' . $request->search . '%');
                 });
             }
-            $tbody = $Data->paginate(10);
-            // dd($tbody);
+            $limit = $request->limit ? $request->limit : 10;
+            $tbody = $Data->paginate($limit);
             $tbody_data = $tbody->items();
             foreach ($tbody_data as $key => $data) {
+
+                $profile = getUserNameWithAvatar($data->name.($data->parent_name?' ('.$data->parent_name.')':''),URL.USER.$data->profile_picture,$data->usercode); 
+                
                 $tbody_data[$key] = 
                 [
                     '<i data-feather="smartphone"></i>',
-                    $data->usercode,
+                    date('h:s:i A',strtotime($data->date)),
+                    $profile,
                     $data->market_name,
                     $data->script_trading_symbol,
                     $data->trade_type,
@@ -611,7 +633,7 @@ class TradingController extends Controller
     public function portfolio_paginate_data(Request $request)
     {
         if ($request->ajax()) {            
-            $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','administrators.*','nex_script_expires.market_name','nex_script_expires.script_trading_symbol','nex_script_expires.expiry_date');
+            $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','administrators.*','nex_script_expires.market_name','nex_script_expires.script_trading_symbol','nex_script_expires.expiry_date',DB::raw('(SELECT  sub_admin.name parent_name FROM administrators sub_admin  WHERE id=administrators.parent_id) parent_name'));
             $thead = ['MARKET','CLIENT','SCRIPT','T. BUY Q','BUY A. P.','T. SELL Q','SELL A. P.','NET Q','A/B P.','MTM','AUTO CLOSE','ACTION'];
             if(!empty($request->market_name))
                 $Data->where('market_id','=',$request->input('market_name'));
@@ -626,10 +648,13 @@ class TradingController extends Controller
             // dd($tbody);
             $tbody_data = $tbody->items();
             foreach ($tbody_data as $key => $data) {
+
+                $profile = getUserNameWithAvatar($data->name.($data->parent_name?' ('.$data->parent_name.')':''),URL.USER.$data->profile_picture,$data->usercode); 
+
                 $tbody_data[$key] = 
                 [
                     $data->market_name,
-                    $data->usercode,
+                    $profile,
                     $data->script_trading_symbol,
                     $data->trade_quantity,
                     '0',

@@ -339,7 +339,6 @@
   <script src="{{ asset(mix('js/scripts/tables/table-datatables-advanced.js')) }}"></script>
 
   <script>
-
     $(".select2-ajax-user_dropdown").select2({
     ajax: {
       url: "{{route('getRoleWiseUserlist')}}",
@@ -385,5 +384,22 @@
         `<div class="d-flex align-items-center p-0"><div class="avatar me-1 avatar-sm"><span class="avatar-content bg-${getRandomColorState()}">${getInitials(option.name)}</span></div><p class="mb-0">` +option.name +`</p></div>`;
       return $person;
   }
+  function getRandomColorState() {
+    const color_states = ['success', 'danger', 'warning', 'info', 'dark', 'primary', 'secondary'];
+    return color_states[Math.floor(Math.random() * color_states.length)];
+  }
+
+  function getInitials(fullName) {
+    if (fullName.split(' ').length === 1) {
+        return fullName.substring(0, 2).toUpperCase();
+    } else {
+        return fullName
+            .split(' ')
+            .slice(0, 2)
+            .map(word => word[0].toUpperCase())
+            .join('')
+            .substring(0, 2);
+    }
+}
   </script>
 @endsection

@@ -507,7 +507,6 @@ function site_favicon_logo()
 } 
 
 function getInitials($full_name) {
-
     if(count(explode(' ', $full_name)) == 1)
         return strtoupper(substr($full_name,0,2));
     return substr(implode('', array_map(fn($word) => (strtoupper(substr($word, 0, 1)) ), explode(' ', $full_name,2))),0,2);
@@ -527,5 +526,37 @@ function url_file_exists($pathOrUrl)
         return file_exists(str_replace(URL,PATH,$pathOrUrl));    
     return false;  
 }
+
+ #----------------------------------------------------------------
+#Function to get User Avatar
+function getUserNameWithAvatar($name='',$image=NULL,$position=' ')
+{
+    if($name=='')
+        return $name;
+
+    $Initials = getInitials($name);
+    $randomState = getRandomColorState();
+    $user_parent_profile = '<span class="avatar-content">'.$Initials.'</span>';
+
+    $user_parent_profile = url_file_exists($image)?                
+    '<img src="'.$image.'" alt="'.$name.'" height="32" width="32">':$user_parent_profile;
+    
+    $user_parent_profile = 
+        '<div class="d-flex justify-content-left align-items-center">
+            <div class="avatar-wrapper">
+                <div class="avatar  bg-light-'.$randomState.'  me-1">
+                '.$user_parent_profile.'
+                </div>
+            </div>
+            <div class="d-flex flex-column">
+                <a href="javascript:void(0);" class="user_name text-truncate text-body">
+                <span class="fw-bolder">'.ucwords($name).'</span>
+                </a>
+                <small class="emp_post text-muted">'. $position.'</small>
+            </div>
+        </div>';
+    return $user_parent_profile;
+}
+#----------------------------------------------------------------
 
 ?>

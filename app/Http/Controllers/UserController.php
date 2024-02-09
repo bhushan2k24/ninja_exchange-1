@@ -32,7 +32,7 @@ class UserController extends Controller
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'broker',
+                    'label'=>'Broker',
                     'name'=>'borker_id',
                     'validation'=>'',
                     'grid'=>3,
@@ -44,7 +44,7 @@ class UserController extends Controller
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'master',
+                    'label'=>'Master',
                     'name'=>'master_id',
                     'validation'=>'',
                     'grid'=>3,
@@ -56,17 +56,19 @@ class UserController extends Controller
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'client',
+                    'label'=>'Client',
                     'name'=>'client_id',
                     'validation'=>'',
                     'grid'=>3,
-                    'data'=>userData('client'),
-                    'outer_div_classes'=>'mb-0'
+                    'data'=>userData('master'),
+                    'outer_div_classes'=>'mb-0',
+                    'element_extra_classes'=>'select2-ajax-user_dropdown',
+                    'element_extra_attributes'=>' data-type="user" '
                 ],
                 [
                     'tag'=>'select',
                     'type'=>'',
-                    'label'=>'status',
+                    'label'=>'Status',
                     'name'=>'user_status',
                     'validation'=>'',
                     'grid'=>3,
@@ -96,7 +98,7 @@ class UserController extends Controller
                 [
                     'tag'=>'input',
                     'type'=>'date',
-                    'label'=>'login after',
+                    'label'=>'Login After',
                     'name'=>'login_after',
                     'validation'=>'',
                     'grid'=>3,
@@ -106,7 +108,7 @@ class UserController extends Controller
                 [
                     'tag'=>'input',
                     'type'=>'date',
-                    'label'=>'login before',
+                    'label'=>'Login Before',
                     'name'=>'login_before',
                     'validation'=>'',
                     'grid'=>3,
@@ -116,7 +118,7 @@ class UserController extends Controller
                 [
                     'tag'=>'input',
                     'type'=>'date',
-                    'label'=>'join after',
+                    'label'=>'Join After',
                     'name'=>'join_after',
                     'validation'=>'',
                     'grid'=>2,
@@ -126,7 +128,7 @@ class UserController extends Controller
                 [
                     'tag'=>'input',
                     'type'=>'date',
-                    'label'=>'join before',
+                    'label'=>'Join Before',
                     'name'=>'join_before',
                     'validation'=>'',
                     'grid'=>2,
@@ -387,7 +389,10 @@ class UserController extends Controller
                 $Data->where('user_broker_id',$request->borker_id);  
 
             if(!empty($request->master_id))
-                $Data->where('parent_id',$request->master_id);                 
+                $Data->where('parent_id',$request->master_id);
+
+            if(!empty($request->client_id))
+                $Data->where('id',$request->client_id);                 
 
             if(!empty($request->search))
             {

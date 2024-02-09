@@ -1,6 +1,13 @@
 var ip  = location.host;
 const mysocket = io(ip+':3000');   
 
+function getLPrice(MyWatchScript= []) {
+    mysocket.emit('updateData', {
+        product: ((typeof MyWatchScript !== 'undefined') ? MyWatchScript : [])
+    });
+}
+
+
 mysocket.on('connect', (sock) => {
     // mysocket.socket.sessionid;
     console.log('Connection established',mysocket.id);

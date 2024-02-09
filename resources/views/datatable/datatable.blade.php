@@ -29,4 +29,6 @@
     <div class="justify-content-end mt-1 mx-2">
         {{ $tbody->links() }}
     </div>
+    {!! (isset($MyWatchScript)?'<script>getLPrice('.json_encode($MyWatchScript, 15, 512).')</script>':'') !!}
+    
 </div>

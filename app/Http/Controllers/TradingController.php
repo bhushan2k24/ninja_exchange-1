@@ -260,7 +260,7 @@ class TradingController extends Controller
     // traders module ---------------
     public function traders()
     {
-        $file['title'] = 'traders';
+        $file['title'] = 'Trades';
         $file['tradersFormData'] = [
             'name'=>'watchlist-form',
             'action'=>route('trades-paginate-data'),
@@ -292,8 +292,10 @@ class TradingController extends Controller
                     'name'=>'trader_after',
                     'validation'=>'',
                     'grid'=>2,
-                    'data'=>[]
+                    'data'=>[],
+                    'outer_div_classes'=>'mb-0'
                 ],
+            
                 [
                     'tag'=>'input',
                     'type'=>'date',
@@ -301,8 +303,10 @@ class TradingController extends Controller
                     'name'=>'trader_before',
                     'validation'=>'',
                     'grid'=>2,
-                    'data'=>[]
+                    'data'=>[],
+                    'outer_div_classes'=>'mb-0'
                 ],
+           
                 [
                     'tag'=>'select',
                     'type'=>'',
@@ -328,7 +332,10 @@ class TradingController extends Controller
                     'name'=>'borker_id',
                     'validation'=>'',
                     'grid'=>2,
-                    'data'=>userData('broker')
+                    'data'=>userData('broker'),
+                    'outer_div_classes'=>'mb-0',
+                    'element_extra_classes'=>'select2-ajax-user_dropdown',
+                    'element_extra_attributes'=>' data-type="broker" '
                 ],
                 [
                     'tag'=>'select',
@@ -337,7 +344,10 @@ class TradingController extends Controller
                     'name'=>'master_id',
                     'validation'=>'',
                     'grid'=>2,
-                    'data'=>userData('master')
+                    'data'=>userData('master'),
+                    'outer_div_classes'=>'mb-0',
+                    'element_extra_classes'=>'select2-ajax-user_dropdown',
+                    'element_extra_attributes'=>' data-type="master" '
                 ],
                 [
                     'tag'=>'select',
@@ -346,7 +356,10 @@ class TradingController extends Controller
                     'name'=>'client_id',
                     'validation'=>'',
                     'grid'=>2,
-                    'data'=>userData('client')
+                    'data'=>userData('client'),
+                    'outer_div_classes'=>'mb-0',
+                    'element_extra_classes'=>'select2-ajax-user_dropdown',
+                    'element_extra_attributes'=>' data-type="user" '
                 ],
                 [
                     'tag'=>'select',
@@ -377,9 +390,10 @@ class TradingController extends Controller
     public function trades_paginate_data(Request $request)
     {
         if ($request->ajax()) 
-        {            
-            $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','nex_trades.id as trade_id','nex_trades.updated_at as date','administrators.*','nex_script_expires.market_name','nex_script_expires.market_id','nex_script_expires.script_id','nex_script_expires.script_name','nex_script_expires.script_trading_symbol',DB::raw('(SELECT  sub_admin.name parent_name FROM administrators sub_admin  WHERE id=administrators.parent_id) parent_name'));
-        
+        {      
+            $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','nex_trades.created_at as trade_created_at','nex_trades.id as trade_id','nex_trades.updated_at as date','administrators.*','nex_script_expires.market_name','nex_script_expires.market_id','nex_script_expires.script_id','nex_script_expires.script_name','nex_script_expires.script_trading_symbol',DB::raw('(SELECT  sub_admin.name parent_name FROM administrators sub_admin  WHERE id=administrators.parent_id) parent_name'));
+            
+                    
             $thead = ['D','TIME','CLIENT','MARKET','SCRIPT',"B/S",'ORDER TYPE','LOT','QTY','ORDER PRICE','STATUS','USER IP','UPDATED AT','ACTION'];
 
             if(!empty($request->order_type))
@@ -389,8 +403,23 @@ class TradingController extends Controller
                 $Data->where('market_id','=',$request->input('market_id'));
 
             if(!empty($request->script_id))
-                $Data->where('script_id','LIKE','%'.$request->script_name."%");
-            
+                $Data->where('script_id','LIKE','%'.$request->script_id."%");
+
+            if(!empty($request->borker_id))
+                $Data->where('user_broker_id',$request->borker_id); 
+
+            if(!empty($request->master_id))
+                $Data->where('parent_id',$request->master_id);
+
+            if(!empty($request->client_id))
+                $Data->where('user_id',$request->client_id);
+                
+            if(!empty($request->trader_after))
+                $Data->where('nex_trades.created_at','>',$request->trader_after);
+
+            if(!empty($request->trader_before))
+                $Data->where('nex_trades.created_at','<',$request->trader_before);
+                            
             if(!empty($request->search))
             {
                 $Data->where(function ($query) use ($request) {
@@ -406,7 +435,7 @@ class TradingController extends Controller
                 });
             }
             $limit = $request->limit ? $request->limit : 10;
-            $tbody = $Data->paginate($limit);
+            $tbody = $Data->orderByDesc('nex_trades.updated_at')->paginate($limit);
             $tbody_data = $tbody->items();
             foreach ($tbody_data as $key => $data) {
 
@@ -415,12 +444,12 @@ class TradingController extends Controller
                 $tbody_data[$key] = 
                 [
                     '<i data-feather="smartphone"></i>',
-                    date('h:s:i A',strtotime($data->date)),
+                    date('H:i:s',strtotime($data->date)),
                     $profile,
                     $data->market_name,
                     $data->script_trading_symbol,
-                    $data->trade_type,
-                    $data->trade_order_type,
+                    ucwords($data->trade_type),
+                    ucwords($data->trade_order_type),
                     $data->trade_lot,
                     $data->trade_quantity,
                     $data->trade_price,
@@ -450,7 +479,7 @@ class TradingController extends Controller
     public function getSingleTrade(Request $request)
     {
 
-        $data= DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','administrators.username','administrators.usercode','nex_script_expires.market_name','nex_script_expires.script_trading_symbol')->where('nex_trades.id',decrypt_to($request->id))->first();
+        $data= DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','administrators.username','administrators.usercode',DB::raw('CONCAT(administrators.username, "(", SUBSTRING(administrators.usercode, 1), ")") as user_name_code'),'nex_script_expires.market_name','nex_script_expires.script_trading_symbol')->where('nex_trades.id',decrypt_to($request->id))->first();
 
         if($data);
             return successResponse(['Message' => 'Record Fetched Successfully!','Data'=>$data]);
@@ -464,7 +493,7 @@ class TradingController extends Controller
     // portfolio module ---------------
     public function portfolio()
     {
-        $file['title'] = 'portfolio/position';
+        $file['title'] = 'Portfolio/Position';
         $file['portfolioFormData'] = [
             'name'=>'watchlist-form',
             'action'=>route('portfolio-paginate-data'),
@@ -514,7 +543,7 @@ class TradingController extends Controller
                     'name'=>'market_id',
                     'validation'=>'',
                     'grid'=>2,
-                    'data'=>marketData()
+                    'data'=>marketdata(0,0,1)
                 ],
                 [
                     'tag'=>'select',
@@ -524,7 +553,7 @@ class TradingController extends Controller
                     'validation'=>'',
                     'grid'=>2,
                     'data'=>scriptData(1)
-                ],
+                ],                      
                 [
                     'tag'=>'select',
                     'type'=>'',
@@ -532,20 +561,10 @@ class TradingController extends Controller
                     'name'=>'master_id',
                     'validation'=>'',
                     'grid'=>2,
-                    'data'=>[
-                        [
-                            'label'=>'1011-DEMO',
-                            'value'=>1
-                        ],
-                        [
-                            'label'=>'1012-DEMO MASTER',
-                            'value'=>2
-                        ],
-                        [
-                            'label'=>'1013-ONLINE MASTER',
-                            'value'=>2
-                        ]
-                    ]
+                    'data'=>userData('master'),
+                    'outer_div_classes'=>'mb-0',
+                    'element_extra_classes'=>'select2-ajax-user_dropdown',
+                    'element_extra_attributes'=>' data-type="master" '
                 ],
                 [
                     'tag'=>'select',
@@ -554,7 +573,10 @@ class TradingController extends Controller
                     'name'=>'client_id',
                     'validation'=>'',
                     'grid'=>2,
-                    'data'=>userData('client')
+                    'data'=>userData('client'),
+                    'outer_div_classes'=>'mb-0',
+                    'element_extra_classes'=>'select2-ajax-user_dropdown',
+                    'element_extra_attributes'=>' data-type="user" '
                 ],
                 [
                     'tag'=>'select',
@@ -563,7 +585,10 @@ class TradingController extends Controller
                     'name'=>'borker_id',
                     'validation'=>'',
                     'grid'=>2,
-                    'data'=>userData('broker')
+                    'data'=>userData('broker'),
+                    'outer_div_classes'=>'mb-0',
+                    'element_extra_classes'=>'select2-ajax-user_dropdown',
+                    'element_extra_attributes'=>' data-type="broker" '
                 ],
                 [
                     'tag'=>'input',
@@ -598,18 +623,18 @@ class TradingController extends Controller
                 //     'outer_div_classes'=>'mb-0',
                 //     'element_extra_classes'=>'btn btn-success'
                 // ],
-                // [
-                //     'tag'=>'button',
-                //     'type'=>'button',
-                //     'value'=>'closeposition',
-                //     'label'=>'Close Position',
-                //     'name'=>'closeposition',
-                //     'validation'=>'',
-                //     'grid'=>2,
-                //     'data'=>[],
-                //     'outer_div_classes'=>'mb-0',
-                //     'element_extra_classes'=>'btn btn-danger '
-                // ],
+                [
+                    'tag'=>'button',
+                    'type'=>'button',
+                    'value'=>'closeposition',
+                    'label'=>'Close Position',
+                    'name'=>'closeposition',
+                    'validation'=>'',
+                    'grid'=>3,
+                    'data'=>[],
+                    'outer_div_classes'=>'mb-0',
+                    'element_extra_classes'=>'btn btn-danger w-125'
+                ],
                 // [
                 //     'tag'=>'button',
                 //     'type'=>'button',
@@ -628,15 +653,31 @@ class TradingController extends Controller
     }
 
 
-
-
     public function portfolio_paginate_data(Request $request)
     {
         if ($request->ajax()) {            
-            $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','administrators.*','nex_script_expires.market_name','nex_script_expires.script_trading_symbol','nex_script_expires.expiry_date',DB::raw('(SELECT  sub_admin.name parent_name FROM administrators sub_admin  WHERE id=administrators.parent_id) parent_name'));
+            $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','nex_trades.created_at as trade_created_at','nex_trades.id as trade_id','nex_trades.updated_at as date','administrators.*','nex_script_expires.market_name','nex_script_expires.expiry_date','nex_script_expires.market_id','nex_script_expires.script_id','nex_script_expires.script_name','nex_script_expires.script_trading_symbol','nex_script_expires.script_extension',DB::raw('(SELECT  sub_admin.name parent_name FROM administrators sub_admin  WHERE id=administrators.parent_id) parent_name'));
+
             $thead = ['MARKET','CLIENT','SCRIPT','T. BUY Q','BUY A. P.','T. SELL Q','SELL A. P.','NET Q','A/B P.','MTM','AUTO CLOSE','ACTION'];
-            if(!empty($request->market_name))
-                $Data->where('market_id','=',$request->input('market_name'));
+
+
+            if(!empty($request->market_id))
+                $Data->where('market_id','=',$request->input('market_id'));
+
+            if(!empty($request->script_id))
+                $Data->where('script_id','LIKE','%'.$request->script_id."%");
+
+            if(!empty($request->borker_id))
+                $Data->where('user_broker_id',$request->borker_id); 
+
+            if(!empty($request->master_id))
+                $Data->where('parent_id',$request->master_id);
+
+            if(!empty($request->client_id))
+                $Data->where('user_id',$request->client_id);
+          
+            if(!empty($request->expire_date))
+                $Data->where('nex_script_expires.expiry_date','=',$request->expire_date);
             
             if(!empty($request->search))
             {
@@ -644,38 +685,60 @@ class TradingController extends Controller
                     $query->where('script_name','LIKE','%'.$request->search."%")->orWhere('market_name','LIKE','%'.$request->search."%")->orWhere('updated_at','LIKE','%'.$request->search."%");
                 });
             }
-            $tbody = $Data->paginate(10);
-            // dd($tbody);
+            $tbody = $Data->orderByDesc('nex_trades.updated_at')->paginate(10);
+            
+            $MyWatchScript = $Data->pluck('script_extension');
+
             $tbody_data = $tbody->items();
             foreach ($tbody_data as $key => $data) {
 
                 $profile = getUserNameWithAvatar($data->name.($data->parent_name?' ('.$data->parent_name.')':''),URL.USER.$data->profile_picture,$data->usercode); 
 
+                $buy_qty = 0;
+                $buy_ap = 0;
+                $sell_qty = 0;
+                $sell_ap = 0;
+                if($data->trade_type=='buy'){
+                    $buy_qty=$data->trade_quantity;
+                    $buy_ap=$data->trade_price;
+                }else if($data->trade_type=='sell'){
+                    $sell_qty=$data->trade_quantity;
+                    $sell_ap=$data->trade_price;
+                }
+                
                 $tbody_data[$key] = 
                 [
                     $data->market_name,
                     $profile,
                     $data->script_trading_symbol,
+                    $buy_qty?$buy_qty:0,
+                    $buy_ap?$buy_ap:0,
+                    $sell_qty?$sell_qty:0,
+                    $sell_ap?$sell_ap:0,
                     $data->trade_quantity,
-                    '0',
-                    '0',
-                    '0',
-                    '0',
-                    '0',
-                    '0',
+                    '<i class="text-success fw-bolder '.$data->script_extension.'PriceChangeicon"
+                    data-feather="trending-up"></i><span class="ms-50 '.$data->script_extension.'SellPrice"></span>',
+                    '<div class="row" style="width: 120px;">
+                        <div class="col-6">UP :</div><div class="col-6">0.00</div>
+                        <div class="col-6">D :</div><div class="col-6">0.00</div>
+                        <div class="col-6">S :</div><div class="col-6">0.00</div>
+                        <div class="col-6">US :</div><div class="col-6">0.00</div>
+                    </div>',
                     $data->expiry_date,
                     '<a href="javascript:void(0);" class="avatar avatar-status bg-light-danger delete_record" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete" deleteto="'.encrypt_to('nex_trades').'/'.encrypt_to($data->id).'">
                     <span class="avatar-content">
                         <i data-feather=\'trash-2\' class="avatar-icon"></i>
                     </span>
                     </a>'
-                 
-                    
+            
                 ];
           }
+          
           $tbody->setCollection(new Collection($tbody_data));
 
-          return view('datatable.datatable', compact('tbody','thead'))->render();
+        //   $MyWatchScript = ['NIFTY24020819500CE','ALUMINI23DECFUT'];
+
+          return view('datatable.datatable', compact('tbody','thead','MyWatchScript'))->render();
         }     
     }
     // ---------------

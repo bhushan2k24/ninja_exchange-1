@@ -80,7 +80,7 @@
                                                         </tr>
                                                     </thead>
                                                 @endif
-
+                                                    
                                                 <tr>
                                                     <th>{{ $symbol_name }}</th>
                                                     <td pl-marketname="{{ $watch_scr->watchlist_market_name }}" pl-market="{{ $symbol }}"
@@ -135,7 +135,7 @@
                 <div class="row">
                     <div class="col-md-2 m-auto  text-center p-75">
                        
-                        <h5 class="offcanvas-title text-primary scriptSymbol" >GOLD-I 31AUG2023</h5>
+                        <h5 class="offcanvas-title text-primary scriptSymbol" ></h5>
 
                     </div>
                     <div class="col-md-10">

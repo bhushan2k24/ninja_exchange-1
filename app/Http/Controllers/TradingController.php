@@ -89,6 +89,8 @@ class TradingController extends Controller
                 }
         $script_expire =  $script_expire->first();
 
+        
+
         $nex_add_watchlist = Nex_watchlist::updateOrCreate( 
             ['market_id'=>$request->market_id,'script_id' => $request->watchlist_filter_script,'script_expires_id'=>$script_expire->id],
             [
@@ -143,7 +145,7 @@ class TradingController extends Controller
         {
             if(!$request->script_id)
                return faildResponse(['Message'=>'Please pass a script!']);
-            $filterdata = $getScripts->select('expiry_date')->where(['script_id'=>$request->script_id])->groupBy('expiry_date')->pluck('expiry_date')->toArray();
+            $filterdata = $getScripts->select('expiry_date')->where(['script_id'=>$request->script_id])->where('expiry_date','>',date('Y-m-d'))->groupBy('expiry_date')->pluck('expiry_date')->toArray();
 
             return successResponse(['Message' => 'Record Fetched Successfully!','setValueTo'=>'watchlist_filter_expiry','Data'=>$filterdata]);
         }

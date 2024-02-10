@@ -26,7 +26,7 @@ class TradingController extends Controller
         $file['title'] = 'WatchList';        
         $file['marketdata'] = marketdata(0,0,1);
         
-        $watchlist_data=Nex_watchlist::select('id','market_id','watchlist_market_name','watchlist_trading_symbol','watchlist_script_extension')->orderBy('market_id')->get();
+        $watchlist_data=Nex_watchlist::select('id','market_id','watchlist_market_name','watchlist_trading_symbol','watchlist_script_extension')->where('user_id',Auth::id())->orderBy('market_id')->get();
 
         $user_data=Administrator::where('user_position','user')->where('user_status','active')->get();
 
@@ -84,12 +84,14 @@ class TradingController extends Controller
                 ->where('script_id', $request->watchlist_filter_script)
                 ->where('expiry_date', $request->watchlist_filter_expiry);
 
-                if($market->market_name=='NSEOPT'){
-                    $script_expire = $script_expire->where('script_instrument_type', $request->watchlist_filter_ce_pe)->where('script_strike_price', $request->watchlist_filter_strick);
-                }
+            if($market->market_name=='NSEOPT'){
+                $script_expire = $script_expire->where('script_instrument_type', $request->watchlist_filter_ce_pe)->where('script_strike_price', $request->watchlist_filter_strick);
+            }
         $script_expire =  $script_expire->first();
 
-        
+        $watchlist_data=Nex_watchlist::where('script_expires_id',$script_expire->id)->first();
+        if($watchlist_data)
+            return faildResponse(['Data'=>['script'=>['Script Already Exist in WatchList']],'Message'=>'Script Already Exist in WatchList']);
 
         $nex_add_watchlist = Nex_watchlist::updateOrCreate( 
             ['market_id'=>$request->market_id,'script_id' => $request->watchlist_filter_script,'script_expires_id'=>$script_expire->id],
@@ -117,8 +119,6 @@ class TradingController extends Controller
 
     public function getwatchlistdata(Request $request){
         $TradingSymbol = $request->input('TradingSymbol');
-        
-    
 
         $data = DB::table('nex_watchlists')
         ->join('nex_scripts','nex_scripts.id','=','nex_watchlists.script_id')
@@ -205,10 +205,11 @@ class TradingController extends Controller
         }
         
         if ($request->tradeBuySell === 'sell'){
-            $User_Trade_Data = Nex_trade::where('user_id', $user_id)->where('trade_type','buy')->where('script_expires_id',$request->script_expires_id)->where('trade_quantity',$request->quantity)->get();
+            $User_Trade_Data = Nex_trade::where('user_id', $user_id)->where('trade_type','buy')->where('script_expires_id',$request->script_expires_id)->where('trade_quantity',$request->quantity)->where('trade_reference_id',0)->get();
+            
 
-            if (!$User_Trade_Data){
-                return faildResponse(['Data'=>['sell'=>['you dont have script to sell first you have to buy']],'Message'=>'You Dont have script to sell first you have to buy']);
+            if ($User_Trade_Data){
+                return faildResponse(['Data'=>['sell'=>["You don't have script to sell or your sell quantity is not match with the quantity you bought"]],'Message'=>"You don't have script to sell or your sell quantity is not match with the quantity you bought"]);
             }
         }
 
@@ -242,7 +243,6 @@ class TradingController extends Controller
             'trade_order_price' => $TradeIntradayPrice ? $TradeIntradayPrice :0,
             'trade_multiplication_value' => $user_intraday_multi ? $user_intraday_multi :0,
         ];
-
  
              $nex_trade = Nex_trade::updateOrCreate( 
             ['id' => $request->id],

@@ -21,39 +21,66 @@
                             <input type="hidden" name="id" id="id">
 
 
-                            <div class="mb-1">
+                            <div>
                                 <label class="form-label col-2" for="basic-addon-name">Script :</label>
                                 <input type="text" style="display: inline-block;width:fit-content;"
                                     id="script_trading_symbol" name="trading_symbol" class="form-control border-0 col-10"
                                     readonly placeholder="Name" aria-label="Name" aria-describedby="basic-addon-name" />
                                 <small class="error trading_symbol-error "></small>
                             </div>
-                            <div class="mb-1">
+                            <div>
                                 <label class="form-label col-2" for="basic-addon-name">Quantity :</label>
-                                <input type="text" style="display: inline-block;width:fit-content;"
-                                    id="trade_quantity" name="quantity" class="form-control border-0 col-10"
-                                    readonly placeholder="Quantity" aria-label="Name" aria-describedby="basic-addon-name"/>
+                                <input type="text" style="display: inline-block;width:fit-content;" id="trade_quantity"
+                                    name="quantity" class="form-control border-0 col-10" readonly placeholder="Quantity"
+                                    aria-label="Name" aria-describedby="basic-addon-name" />
                                 <small class="error quantity-error "></small>
                             </div>
-                            <div class="mb-1">
+                            <div>
                                 <label class="form-label col-2" for="basic-addon-name">Price :</label>
-                                <input type="text" style="display: inline-block;width:fit-content;"
-                                    id="trade_price" name="price" class="form-control border-0 col-10"
-                                    readonly placeholder="Quantity" aria-label="Name" aria-describedby="basic-addon-name"/>
+                                <input type="text" style="display: inline-block;width:fit-content;" id="trade_price"
+                                    name="price" class="form-control border-0 col-10" readonly placeholder="Quantity"
+                                    aria-label="Name" aria-describedby="basic-addon-name" />
                                 <small class="error price-error "></small>
                             </div>
 
+                            <div>
+                                <label class="form-label col-2 mb-1" for="basic-addon-name">Amount :</label>
+                                    <input type="text"  style="display: inline-block;width:fit-content;"  id="trade_amount" name="trade_amount" class="form-control" placeholder="Amount" value="" aria-label="Name" aria-describedby="basic-addon-name">
+                                    <small class="error trade_amount-error "></small>
+                            </div>
+
+
+                                <div class="col col-md-12 mb-1">
+                                    <div class="demo-inline-spacing mt-0">
+                                        <label class="form-label col-2 mt-0" for="basic-addon-name">Type :</label>
+                                        <div class="text-capitalize form-check form-check-inline form-check-primary mt-0">
+                                            <input type="radio" placeholder="" name="portfolio_type" value="limit"
+                                                class="form-check-input  " id="portfolio_type0">
+                                            <label class="form-check-label" for="portfolio_type0">Limit</label>
+                                        </div>
+                                        <div class="text-capitalize form-check form-check-inline form-check-primary mt-0">
+                                            <input type="radio" placeholder="" name="portfolio_type" value="stop_loss"
+                                                class="form-check-input  " id="portfolio_type1">
+                                            <label class="form-check-label" for="portfolio_type1">Stop Loss</label>
+                                        </div>
+                                    </div><small class="error portfolio_type-error"></small>
+                                </div>
+        
+
+         
+                         
+{{-- 
                             <div class="mb-1">
                                 <label class="form-label" for="basic-addon-name">Type :</label>
                                 <select name="market_id" id="market_id" class="form-control  form-select select2">
                                     <option value="" disabled selected>Select Type</option>
                                     <option value="limit">Limit</option>
                                     <option value="stop_loss">Stop Loss</option>
-                                    
+
                                 </select>
-                            </div>
-                            
-                            
+                            </div> --}}
+
+
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                 <button type="submit" class="btn btn-primary" id="saveBtn">Save changes</button>

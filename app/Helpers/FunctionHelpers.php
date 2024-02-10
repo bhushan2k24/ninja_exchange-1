@@ -30,7 +30,7 @@ class FunctionHelpers
 
                 $html .=
                 '<div class="mb-1 col col-md-'.(!empty($value['grid']) ? $value['grid'] : '12').'">
-                    <label class="form-label" for="login-email">'.$value['label'].'</label>';
+                    <label class="form-label" for="login-email">'.ucwords($value['label']).'</label>';
                     if ($value['tag'] == 'input')
                     {
                         if (in_array($value['type'], ['text', 'email', 'password', 'number','button']))

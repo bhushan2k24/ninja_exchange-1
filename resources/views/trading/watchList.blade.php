@@ -54,24 +54,42 @@
                             <div class="col-md-12">
                                 <div class="card-datatable table-responsive">
                                     <table class="dt-responsive table table-sm">
-                                        <tbody>
-
-
+                                        <tbody> 
+                                            @if($watchlist_data->isEmpty())
+                                                <thead>
+                                                    <tr>
+                                                        <th>SEGMENT</th>
+                                                        <th class="text-nowrap">BID RATE</th>
+                                                        <th class="text-nowrap">ASK RATE</th>
+                                                        <th>LTP</th>
+                                                        <th class="text-nowrap">CHANGE %</th>
+                                                        <th class="text-nowrap">NET CHANGE</th>
+                                                        <th>HIGH</th>
+                                                        <th>LOW</th>
+                                                        <th>OPEN</th>
+                                                        <th>CLOSE</th>
+                                                        <th>REMOVE</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <th class="text-center" colspan="11">
+                                                        <i data-feather='check-square' class="text-danger me-50"></i>Your watchlist is empty...</th>
+                                                </tbody>
+                                            @endif                                            
                                             @foreach ($watchlist_data as $w_key => $watch_scr)
                                                 @php($market = '')
                                                 @php($symbol = $watch_scr->watchlist_script_extension)
                                                 @php($symbol_name = $watch_scr->watchlist_trading_symbol)
 
-
                                                 @if ($w_key == 0 || ($w_key > 0 && $watchlist_data[$w_key - 1]->market_id != $watch_scr->market_id))
                                                     <thead>
                                                         <tr>
                                                             <th >{{ $watch_scr->watchlist_market_name }}</th>
-                                                            <th>BID RATE</th>
-                                                            <th>ASK RATE</th>
+                                                            <th class="text-nowrap">BID RATE</th>
+                                                            <th class="text-nowrap">ASK RATE</th>
                                                             <th>LTP</th>
-                                                            <th>CHANGE %</th>
-                                                            <th>NET CHANGE</th>
+                                                            <th class="text-nowrap">CHANGE %</th>
+                                                            <th class="text-nowrap">NET CHANGE</th>
                                                             <th>HIGH</th>
                                                             <th>LOW</th>
                                                             <th>OPEN</th>
@@ -320,7 +338,7 @@
 
 @section('page-script')
     {{-- Page js files --}}
-    <script src="{{ asset(mix('js/scripts/tables/table-datatables-advanced.js')) }}"></script>
+    {{-- <script src="{{ asset(mix('js/scripts/tables/table-datatables-advanced.js')) }}"></script> --}}
 
     <script>
         $(document).ready(function() {

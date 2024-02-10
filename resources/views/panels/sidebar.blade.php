@@ -35,11 +35,17 @@ $sidebarData = sideContentData();
     {
       foreach($sidebarData as $value)
       {
+
+        if(empty($value))
+          continue;
+        
         $is_open = '';
+        if (!empty($value['childData'])){
         array_map(function ($childValue) use (&$is_open) {
             $link_attribute = $childValue['link_attribute'] ?? [];
             $is_open = (url()->current() === route($childValue['link'], $link_attribute)) ? "open" : $is_open;
         }, $value['childData']);
+        }
         $link_attribute = isset($value['link_attribute'])?$value['link_attribute']:[] ;
         echo
         '<li class="nav-item '.(!empty($value['childData']) ? 'has-sub' : '').' '.(!empty($value['open']) ? 'opens' : '').' '.$is_open.' '.( Route::has($value['link']) && url()->current() === Route($value['link'],$link_attribute) ? "active" :  "" ).'">

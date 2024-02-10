@@ -69,5 +69,5 @@ $configData = Helper::applClasses();
 
 @section('vendor-script')
 <script src="{{asset(mix('vendors/js/forms/validation/jquery.validate.min.js'))}}"></script>
-<script src="{{asset(mix('vendors/helper/js/form.min.js'))}}"></script>
+<script src="{{asset('vendors/helper/js/form.min.js')}}"></script
 @endsection

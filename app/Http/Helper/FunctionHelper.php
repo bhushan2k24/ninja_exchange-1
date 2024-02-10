@@ -116,9 +116,11 @@ function createFormHtmlContent($formArray = [])
                         {
                             foreach($value['data'] as $childKey => $childValue)
                             {
+                                
+                                $checked = (!empty($value['value']) && $value['value'] == $childValue['value'] ? 'checked' : '');
                                 $html .=
                                 '<div class="text-capitalize form-check form-check-primary mt-'.($childKey > 0 ? '1' : '0').'">
-                                    <input type="'.$value['type'].'"  placeholder="'.$value['placeholder'].'"  name="'.$value['name'].'" value="'.$childValue['value'].'" class="form-check-input  '.$element_extra_classes.'" id="'.$value['name'].$childKey.'" />
+                                    <input type="'.$value['type'].'"  placeholder="'.$value['placeholder'].'"  name="'.$value['name'].'" value="'.$childValue['value'].'" class="form-check-input  '.$element_extra_classes.'" id="'.$value['name'].$childKey.'" '.$checked.'/>
                                     <label class="form-check-label" for="'.$value['name'].$childKey.'">'.$childValue['label'].'</label>
                                 </div>';
                             }
@@ -229,9 +231,11 @@ function createDatatableFormFilter($formArray = [])
                             {
                                 foreach($value['data'] as $childKey => $childValue)
                                 {
+                                    $checked = (!empty($value['value']) && $value['value'] == $childValue['value'] ? 'checked' : '');
+
                                     $html .=
                                     '<div class="text-capitalize form-check form-check-primary mt-'.($childKey > 0 ? '1' : '0').'">
-                                        <input type="'.$value['type'].'"  placeholder="'.$value['placeholder'].'"  name="'.$value['name'].'" value="'.$childValue['value'].'" class="form-check-input  '.$element_extra_classes.'" id="'.$value['name'].$childKey.'" />
+                                        <input type="'.$value['type'].'"  placeholder="'.$value['placeholder'].'"  name="'.$value['name'].'" value="'.$childValue['value'].'" class="form-check-input  '.$element_extra_classes.'" id="'.$value['name'].$childKey.'" '.$checked.' />
                                         <label class="form-check-label" for="'.$value['name'].$childKey.'">'.$childValue['label'].'</label>
                                     </div>';
                                 }

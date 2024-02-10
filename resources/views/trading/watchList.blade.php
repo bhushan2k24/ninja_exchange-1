@@ -150,6 +150,8 @@
             <input type="hidden" name="script_expires_id" id="script_expires_id">
 
             <div class="offcanvas-body">
+                <button type="button" class="btn-close text-reset"
+                            data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 <div class="row">
                     <div class="col-md-2 m-auto  text-center p-75">
                        
@@ -311,9 +313,8 @@
                     @endif
                     <div class="col-12 col-md-2 d-flex align-items-start justify-content-end ps-0 mt-1">
                         <button type="submit"
-                            class="btn btn-primary me-1 waves-effect waves-float waves-light">Continue</button>
-                        <button type="button" class="btn btn-outline-secondary waves-effect"
-                            data-bs-dismiss="offcanvas">Cancel</button>
+                            class="btn btn-primary me-1 waves-effect waves-float waves-light buy-sell-btn w-100">Continue</button>
+                        
                     </div>
 
                 </div>
@@ -346,7 +347,9 @@
                 
                 $('.scriptPriceCalc').removeAttr('pl-SellPrice','');
                 $('.scriptPriceCalc').attr('pl-BuyPrice','');
-                $('#tradeSell').change();                   
+                $('#tradeSell').change();  
+                $('.buy-sell-btn').text('Sell');  
+                                 
             });
 
             $('.askclick').on('click', function () {
@@ -354,7 +357,7 @@
                 
                 $('.scriptPriceCalc').removeAttr('pl-BuyPrice','');
                 $('.scriptPriceCalc').attr('pl-SellPrice','');
-
+                $('.buy-sell-btn').text('Buy');
                 $('#tradeBuy').change();
                    
             });
@@ -362,9 +365,11 @@
             $('input[name="tradeBuySell"]').change(function() {
                 var outerDiv = $(this).closest('.offcanvas');
                 if ($(this).val() == 'buy') {
+                    $('.buy-sell-btn').text('Buy');
                     outerDiv.removeClass('offcanvas-danger')
                     outerDiv.addClass('offcanvas-primary');
                 } else if ($(this).val() == 'sell') {
+                    $('.buy-sell-btn').text('Sell');
                     outerDiv.addClass('offcanvas-danger');
                     outerDiv.removeClass('offcanvas-primary');
                 }

@@ -232,7 +232,7 @@
           </div>
         </div>
 
-        <div class="card master_section {{(!($isedit && $userData->hasRole('master')) ? "hidden" :'' )}}">
+        <div class="card user_section {{(!($isedit && $userData->hasRole('user')) ? "hidden" :'' )}}">
           {{-- <div class="card-header">
             <h4 class="card-title">Additional Details</h4>
           </div> --}}

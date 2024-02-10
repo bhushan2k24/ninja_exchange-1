@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Auth;
 use PhpParser\Node\Expr\FuncCall;
 
 function demoTest($name = 'user')
@@ -83,7 +84,7 @@ function createFormHtmlContent($formArray = [])
             }
             $html .=
             '<div class="col-12 col-md-'.(!empty($value['grid']) ? $value['grid'] : '12').' '.(!empty($value['outer_div_classes']) ? $value['outer_div_classes'] : '').'" style="margin-bottom: 1rem">
-                <label class="form-label" for="login-email">'.$value['label'].'</label>';
+                <label class="form-label" for="login-email">'.ucwords($value['label']).'</label>';
 
                 $value['placeholder'] = ucwords(!empty($value['placeholder'])?$value['placeholder']:$value['label']);
 
@@ -299,7 +300,7 @@ function sideContentData($array = [])
 {
     $data = [
         [
-            'label'=>'dashboard',
+            'label'=> (Auth::user()->hasRole(['admin','master'])?'dashboard':'home'),
             'link'=>'admin.dashboard',
             'icon'=>'home',
             'childData'=>[]
@@ -357,6 +358,7 @@ function sideContentData($array = [])
                 ]
             ]
         ],
+        (Auth::user()->hasRole(['admin','master'])?
         [
             'label'=>'users',
             'link'=>'',
@@ -392,8 +394,9 @@ function sideContentData($array = [])
                     'icon'=>'circle',
                 ]
             ]
-        ],
-        [
+        ]:[]),
+        (Auth::user()->hasRole(['admin','master'])?
+        ([
             'label'=>'settings',
             'link'=>'',
             'icon'=>'sliders',
@@ -436,7 +439,22 @@ function sideContentData($array = [])
                     'icon'=>'clock',
                 ]               
             ]
-        ]
+        ]):[]),      
+        (Auth::user()->hasRole(['user'])?
+        [
+            'label'=>'wallet',
+            'link'=>'wallet.view',
+            'icon'=>'pocket',
+            'childData'=>[]
+        ]:[]),        
+        [
+            'label'=>'Logout',
+            'link'=>'admin.logout',
+            'icon'=>'power',
+            'childData'=>[]
+        ],
+
+
     ];
 
     return $data;

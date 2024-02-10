@@ -105,6 +105,14 @@ Route::middleware(['auth:admin','role:admin|master|user'])->group(function () {
         Route::post('password-update', [SettingsController::class, 'security_setting_store'])->name('password.update');
     });
 
+     /* Helper for all */
+    Route::controller(HelperController::class)->group(function () {
+        Route::group(['prefix' => 'helper'], function () {        
+            Route::post('/getmarket-to-scripts', 'getMarketToScripts')->name('helper.getMarkrtToScripts');  
+            Route::post('/delete-record/{table_name}/{id}', 'deleteRecord')->name('helper.deleteRecord');            
+        });
+    });
+
 });
 Route::middleware(['auth:admin','role:admin|master'])->group(function () {
 
@@ -212,9 +220,9 @@ Route::middleware(['auth:admin','role:admin|master'])->group(function () {
     Route::controller(HelperController::class)->group(function () {
         Route::group(['prefix' => 'helper'], function () {
             Route::post('/change-stautus/{table_name}/{id}/{status_column_name?}', 'changeStatus')->name('helper.changeStatus');
-            Route::post('/delete-record/{table_name}/{id}', 'deleteRecord')->name('helper.deleteRecord');                        
+            // Route::post('/delete-record/{table_name}/{id}', 'deleteRecord')->name('helper.deleteRecord');                        
             Route::post('/getRecord/{table_name}/{id}', 'getRecord')->name('helper.getRecord');            
-            Route::post('/getmarket-to-scripts', 'getMarketToScripts')->name('helper.getMarkrtToScripts');              
+            // Route::post('/getmarket-to-scripts', 'getMarketToScripts')->name('helper.getMarkrtToScripts');              
         });
     });
 

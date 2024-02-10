@@ -196,10 +196,17 @@ class TradingController extends Controller
             return faildResponse(['Message' => 'Validation Warning', 'Data' => $validated->errors()->toArray()]);
 
         if ($request->tradeBuySell === 'buy'){
-
             $TotalWalletAmount = Nex_wallet::where('user_id', $user_id)->sum('wallet_amount');
             if ($TradeIntradayPrice > $TotalWalletAmount) {
                 return faildResponse(['Data'=>['price'=>['Insufficient Balance To Trade']],'Message'=>'Insufficient Balance To Trade']);
+            }
+        }
+        
+        if ($request->tradeBuySell === 'sell'){
+            $User_Trade_Data = Nex_trade::where('user_id', $user_id)->where('trade_type','buy')->where('script_expires_id',$request->script_expires_id)->where('trade_quantity',$request->quantity)->get();
+
+            if (!$User_Trade_Data){
+                return faildResponse(['Data'=>['sell'=>['you dont have script to sell first you have to buy']],'Message'=>'You Dont have script to sell first you have to buy']);
             }
         }
 
@@ -225,19 +232,30 @@ class TradingController extends Controller
             'trade_close' => $request->has('Close') ? $request->Close : 0,
             'trade_type' => $request->has('tradeBuySell') ? $request->tradeBuySell : '',
             'trade_order_type' => 'market', 
-            'trade_reference_id' => $request->has('script_extension') ? $request->script_extension : 0,
+            'trade_reference_id' => 0,
             'user_ip' => $request->getClientIp(),
-
             'trade_quantity' => $request->has('quantity') ? $request->quantity : 0,
             'trade_lot' => $request->has('lot') ? $request->lot : 0,
             'trade_price' => $request->has('price') ? $request->price :0,
             'trade_order_price' => $TradeIntradayPrice ? $TradeIntradayPrice :0,
             'trade_multiplication_value' => $user_intraday_multi ? $user_intraday_multi :0,
         ];
-        
+
+ 
              $nex_trade = Nex_trade::updateOrCreate( 
             ['id' => $request->id],
             $updateFields);
+
+            $lastBuyTrade = Nex_trade::where('trade_type', 'buy')
+            ->where('user_id', $user_id)
+            ->where('script_expires_id', $request->script_expires_id)
+            ->where('trade_quantity',$request->quantity)
+            ->where('trade_reference_id','0')
+            ->orderBy('id', 'asc') 
+            ->first();
+
+            if($lastBuyTrade && $request->has('tradeBuySell') && $request->tradeBuySell === 'sell') 
+                $lastBuyTrade->update(['trade_reference_id' => $nex_trade->id]);
 
             $transactionType = ($request->tradeBuySell === 'buy') ? 'debit' : 'credit';
             $walletAmount = ($request->tradeBuySell === 'buy') ? -abs($nex_trade['trade_order_price']) : abs($nex_trade['trade_order_price']);
@@ -693,7 +711,6 @@ class TradingController extends Controller
             foreach ($tbody_data as $key => $data) {
 
                 $profile = getUserNameWithAvatar($data->name.($data->parent_name?' ('.$data->parent_name.')':''),URL.USER.$data->profile_picture,$data->usercode); 
-
                 $buy_qty = 0;
                 $buy_ap = 0;
                 $sell_qty = 0;
@@ -701,9 +718,11 @@ class TradingController extends Controller
                 if($data->trade_type=='buy'){
                     $buy_qty=$data->trade_quantity;
                     $buy_ap=$data->trade_price;
+                    $class="SellPrice";
                 }else if($data->trade_type=='sell'){
                     $sell_qty=$data->trade_quantity;
                     $sell_ap=$data->trade_price;
+                    $class="BuyPrice";
                 }
                 
                 $tbody_data[$key] = 
@@ -717,7 +736,7 @@ class TradingController extends Controller
                     $sell_ap?$sell_ap:0,
                     $data->trade_quantity,
                     '<i class="text-success fw-bolder '.$data->script_extension.'PriceChangeicon"
-                    data-feather="trending-up"></i><span class="ms-50 '.$data->script_extension.'SellPrice"></span>',
+                    data-feather="trending-up"></i><span class="ms-50 '.$data->script_extension.''.$class.'"></span>',
                     '<div class="row" style="width: 120px;">
                         <div class="col-6">UP :</div><div class="col-6">0.00</div>
                         <div class="col-6">D :</div><div class="col-6">0.00</div>

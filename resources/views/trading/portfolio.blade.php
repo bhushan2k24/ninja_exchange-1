@@ -5,6 +5,65 @@
 @section('content')
 
     <section id="basic-vertical-layouts">
+        <div class="modal animated fade show " id="ajaxModel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-transparent">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="modelHeading"></h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="sliderForm" method="POST" name="sliderForm" action="{{ route('save.trade') }}"
+                            class="needs-validation" enctype="multipart/form-data">
+                            @csrf
+                            <input type="hidden" name="id" id="id">
+
+
+                            <div class="mb-1">
+                                <label class="form-label col-2" for="basic-addon-name">Script :</label>
+                                <input type="text" style="display: inline-block;width:fit-content;"
+                                    id="script_trading_symbol" name="trading_symbol" class="form-control border-0 col-10"
+                                    readonly placeholder="Name" aria-label="Name" aria-describedby="basic-addon-name" />
+                                <small class="error trading_symbol-error "></small>
+                            </div>
+                            <div class="mb-1">
+                                <label class="form-label col-2" for="basic-addon-name">Quantity :</label>
+                                <input type="text" style="display: inline-block;width:fit-content;"
+                                    id="trade_quantity" name="quantity" class="form-control border-0 col-10"
+                                    readonly placeholder="Quantity" aria-label="Name" aria-describedby="basic-addon-name"/>
+                                <small class="error quantity-error "></small>
+                            </div>
+                            <div class="mb-1">
+                                <label class="form-label col-2" for="basic-addon-name">Price :</label>
+                                <input type="text" style="display: inline-block;width:fit-content;"
+                                    id="trade_price" name="price" class="form-control border-0 col-10"
+                                    readonly placeholder="Quantity" aria-label="Name" aria-describedby="basic-addon-name"/>
+                                <small class="error price-error "></small>
+                            </div>
+
+                            <div class="mb-1">
+                                <label class="form-label" for="basic-addon-name">Type :</label>
+                                <select name="market_id" id="market_id" class="form-control  form-select select2">
+                                    <option value="" disabled selected>Select Type</option>
+                                    <option value="limit">Limit</option>
+                                    <option value="stop_loss">Stop Loss</option>
+                                    
+                                </select>
+                            </div>
+                            
+                            
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary" id="saveBtn">Save changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row " style="margin-bottom: -1rem">
             <div class="col-12">
                 <div class="card">

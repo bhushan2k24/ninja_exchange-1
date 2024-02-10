@@ -278,7 +278,7 @@ class TradingController extends Controller
 
     #----------------------------------------------------------------
     // traders module ---------------
-    public function traders()
+    public function traders(Request $request)
     {
         $file['title'] = 'Trades';
         $file['tradersFormData'] = [
@@ -294,6 +294,7 @@ class TradingController extends Controller
                     'name'=>'order_type',
                     'validation'=>'',
                     'grid'=>2,
+                    'value'=>$request->has('tradetype') ? $request->tradetype : '',
                     'data'=>[
                         [
                             'label'=>'pending orders',
@@ -731,7 +732,7 @@ class TradingController extends Controller
                 [
                     $data->market_name,
                     $profile,
-                    $data->script_trading_symbol,
+                    '<a data-bs-toggle="tooltip" data-bs-placement="bottom" href="javascript:void(0);" class="order-type-modal openmodal-ajaxModel" recordof="getsingletrade/'.encrypt_to($data->trade_id).'" data-bs-toggle="tooltip" data-bs-placement="bottom" title="type" id="'.$data->trade_id.'">'.$data->script_trading_symbol.'</a>',
                     $buy_qty?$buy_qty:0,
                     $buy_ap?$buy_ap:0,
                     $sell_qty?$sell_qty:0,

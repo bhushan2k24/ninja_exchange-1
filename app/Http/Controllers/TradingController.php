@@ -47,11 +47,9 @@ class TradingController extends Controller
    
         return successResponse(['Message'=>'Success!', 'Data'=>[],'Redirect'=>route('view.watchlist')]);
     }
-
-
+    #----------------------------------------------------------------
     #----------------------------------------------------------------
     #WatchList Save Page
-
     public function saveWatchList(Request $request)
     {
 
@@ -112,11 +110,9 @@ class TradingController extends Controller
         ); 
         return successResponse(['Message' => 'Success!', 'Data' => [], 'Redirect' => route('view.watchlist')]);
     }
-
     #----------------------------------------------------------------
     #----------------------------------------------------------------
     #Get With Ajax 
-
     public function getwatchlistdata(Request $request){
         $TradingSymbol = $request->input('TradingSymbol');
 
@@ -127,11 +123,8 @@ class TradingController extends Controller
 
 
         return successResponse(['Data' => $data]);
-    }
-    
-
-
-
+    } 
+    #----------------------------------------------------------------
     #----------------------------------------------------------------
     #to get dependent filter data
     public function getWatchlistFilterValues(Request $request)
@@ -170,8 +163,8 @@ class TradingController extends Controller
         
         return faildResponse(['Message' => 'Provided All Information!']);
     }
-
-
+    #----------------------------------------------------------------
+    #----------------------------------------------------------------
     #Trade Store
     public function store_trade(Request $request)
     {
@@ -187,9 +180,13 @@ class TradingController extends Controller
         $user_delivery_multi = $userDetails->user_delivery_multiplication;
 
         $user_delivery_multi = $userDetails->user_delivery_multiplication;
-        $TradeLivePrice = $request->price?:0;
+
+        
         $TradeQuantity = $request->quantity?:1;
         $TradeLot = $request->lot?:1;
+
+        $TradeLivePrice = $request->price?:0;
+        $TradeLivePrice  = (float) str_replace(',', '', $TradeLivePrice);
 
         $TradeIntradayPrice = ($TradeLivePrice*$TradeQuantity)/$user_intraday_multi;
         $TradeDeliveryPrice = ($TradeLivePrice*$TradeQuantity)/$user_delivery_multi;
@@ -199,6 +196,7 @@ class TradingController extends Controller
 
         if ($request->tradeBuySell === 'buy'){
             $TotalWalletAmount = Nex_wallet::where('user_id', $user_id)->sum('wallet_amount');
+
             if ($TradeIntradayPrice > $TotalWalletAmount) {
                 return faildResponse(['Data'=>['price'=>['Insufficient Balance To Trade']],'Message'=>'Insufficient Balance To Trade']);
             }
@@ -206,9 +204,7 @@ class TradingController extends Controller
         
         if ($request->tradeBuySell === 'sell'){
             $User_Trade_Data = Nex_trade::where('user_id', $user_id)->where('trade_type','buy')->where('script_expires_id',$request->script_expires_id)->where('trade_quantity',$request->quantity)->where('trade_reference_id',0)->get();
-            
-
-            if ($User_Trade_Data){
+           if ($User_Trade_Data->isEmpty()){
                 return faildResponse(['Data'=>['sell'=>["You don't have script to sell or your sell quantity is not match with the quantity you bought"]],'Message'=>"You don't have script to sell or your sell quantity is not match with the quantity you bought"]);
             }
         }

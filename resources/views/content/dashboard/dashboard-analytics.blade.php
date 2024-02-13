@@ -544,7 +544,7 @@
       </div>
       <div class="card invoice-list-wrapper">
         <div class="card-datatable table-responsive">
-          <table class="invoice-list-table table table-sm">
+          <table class="invoice-list-table table table-sm table-hover">
             <thead>
               <tr>
                 <th>D</th>

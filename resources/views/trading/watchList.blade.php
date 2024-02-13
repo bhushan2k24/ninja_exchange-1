@@ -142,7 +142,7 @@
         </div>
     </section>
 
-    <div class="offcanvas offcanvas-bottom rounded-top offcanvas-primary" tabindex="-1" id="offcanvasBottom"
+    <div class="offcanvas offcanvas-bottom rounded-top offcanvas-primary overflow-auto" tabindex="-1" id="offcanvasBottom"
         aria-labelledby="offcanvasBottomLabel">
 
         <form action="{{ route('save.trade') }}" method="POST">
@@ -153,16 +153,14 @@
                 <button type="button" class="btn-close text-reset"
                             data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 <div class="row">
-                    <div class="col-md-2 m-auto  text-center p-75">
-                       
+                    <div class="col-md-2 m-auto  text-center p-75">                       
                         <h5 class="offcanvas-title text-primary scriptSymbol" ></h5>
-
                     </div>
                     <div class="col-md-10">
                         <div class="card-body statistics-body py-0 pe-1">
                             <div class="row justify-content-md-end justify-content-around  gap-25">
 
-                                <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-success border-success p-50 rounded">
+                                <div class="col-xl-auto col-sm-6 col-5  mb-xl-0 bg-light-success border-success p-50 rounded">
                                     <div class="d-flex flex-row">
                                         <div class="my-auto">
                                             <h4 class="fw-bo  lder mb-0 " pl-BuyPrice="NIFTY-I">0.00</h4>
@@ -170,7 +168,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-success border-success p-50 rounded">
+                                <div class="col-xl-auto col-sm-6 col-5  mb-xl-0 bg-light-success border-success p-50 rounded">
                                     <div class="d-flex flex-row">
                                         <div class="my-auto">
                                             <h4 class="fw-bolder mb-0 " pl-SellPrice="NIFTY-I">0.00</h4>
@@ -178,7 +176,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-success border-success p-50 rounded">
+                                <div class="col-xl-auto col-sm-6 col-5  mb-xl-0 bg-light-success border-success p-50 rounded">
                                     <div class="d-flex flex-row">
                                         <div class="my-auto">
                                             <h4 class="fw-bolder mb-0" pl-LastTradePrice>0.00</h4>
@@ -187,7 +185,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
+                                    class="col-xl-auto col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
                                     <div class="d-flex flex-row">
                                         <div class="my-auto">
                                             <h4 class="fw-bolder mb-0" pl-PriceChangePercentage>0.00</h4>
@@ -196,7 +194,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
+                                    class="col-xl-auto col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
                                     <div class="d-flex flex-row">
                                         <div class="my-auto">
                                             <h4 class="fw-bolder mb-0" pl-PriceChange>0.00</h4>
@@ -205,7 +203,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
+                                    class="col-xl-auto col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
                                     <div class="d-flex flex-row">
                                         <div class="my-auto">
                                             <h4 class="fw-bolder mb-0" pl-High>0.00</h4>
@@ -214,7 +212,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
+                                    class="col-xl-auto col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
                                     <div class="d-flex flex-row">
                                         <div class="my-auto">
                                             <h4 class="fw-bolder mb-0" pl-Low>0.00</h4>
@@ -223,7 +221,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
+                                    class="col-xl-auto col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
                                     <div class="d-flex flex-row">
                                         <div class="my-auto">
                                             <h4 class="fw-bolder mb-0" pl-Open>0.00</h4>
@@ -232,7 +230,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    class="col-xl-1 col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
+                                    class="col-xl-auto col-sm-6 col-5  mb-xl-0 bg-light-secondary border-secondary p-50 rounded">
                                     <div class="d-flex flex-row">
                                         <div class="my-auto">
                                             <h4 class="fw-bolder mb-0" pl-Close>0.00</h4>
@@ -364,21 +362,38 @@
 
             $('input[name="tradeBuySell"]').change(function() {
                 var outerDiv = $(this).closest('.offcanvas');
+
+                var TradingSymbol_market =  $('input[name="TradingSymbol"]').val();
                 if ($(this).val() == 'buy') {
                     $('.buy-sell-btn').text('Buy');
                     outerDiv.removeClass('offcanvas-danger')
                     outerDiv.addClass('offcanvas-primary');
+
+                    var plattr_val = $('.scriptPriceCalc').attr('pl-buyprice');
+                    $('.scriptPriceCalc').removeAttr('pl-buyprice');
+
+                    $('.scriptPriceCalc').attr('pl-sellprice',plattr_val);
+                    $('.scriptPriceCalc').val($('h4[pl-sellprice="' + TradingSymbol_market+'"]').html
+                    ());                   
+
+                    // pl-sellprice="ABBOTINDIA-II"
+
                 } else if ($(this).val() == 'sell') {
                     $('.buy-sell-btn').text('Sell');
                     outerDiv.addClass('offcanvas-danger');
                     outerDiv.removeClass('offcanvas-primary');
+
+                     var plattr_val = $('.scriptPriceCalc').attr('pl-sellprice');
+                    $('.scriptPriceCalc').removeAttr('pl-sellprice');
+
+                    $('.scriptPriceCalc').attr('pl-buyprice',plattr_val);
+                    $('.scriptPriceCalc').val($('h4[pl-buyprice="' + TradingSymbol_market+'"]').html());
+
                 }
             });
 
             // Trigger the change event initially to set the initial state
-            $('input[name="transaction"]:checked').change();
-
-          
+            $('input[name="transaction"]:checked').change();         
 
         });
     </script>
@@ -388,10 +403,8 @@
         $(document).ready(function() {
             $('.open-watchlistoffcanvas').on('click', function() {
 
-
                 var TradingSymbol = $(this).attr('pl-market');
-                var TradingMarket = $(this).attr('pl-marketname');
-                
+                var TradingMarket = $(this).attr('pl-marketname');                
 
                 $.ajax({
                     url: '{{ route('get.watchlist.ajax') }}',

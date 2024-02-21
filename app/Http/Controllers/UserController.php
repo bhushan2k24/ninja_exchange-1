@@ -591,8 +591,33 @@ class UserController extends Controller
 
         $Data = Administrator::role($request->user_position);
         
-        if(!Auth::user()->hasRole('admin'))
-         $Data->where('parent_id', Auth::id());  
+        // if(!Auth::user()->hasRole('admin'))
+        //  $Data->where('parent_id', Auth::id()); 
+        
+        if(Auth::user()->hasRole('master'))
+            $Data->where('parent_id', Auth::id());           //user|broker|master          
+        elseif(Auth::user()->hasRole('user'))
+        {
+            // $Data->where('parent_id', Auth::user()->parent_id);
+            if($request->user_position=='user')
+                $Data->where('id', Auth::id());
+            elseif($request->user_position=='master')
+                $Data->where('id', Auth::user()->parent_id);
+            elseif($request->user_position=='broker')
+                $Data->where('id', Auth::user()->user_broker_id);
+
+        }            
+        elseif(Auth::user()->hasRole('broker'))
+        {
+            // $Data->where('parent_id', Auth::user()->parent_id)->where('user_broker_id',Auth::id());
+            if($request->user_position=='user')
+                $Data->where('user_broker_id', Auth::id());
+            elseif($request->user_position=='master')
+                $Data->where('id', Auth::user()->parent_id);
+            elseif($request->user_position=='broker')
+                $Data->where('id', Auth::id());
+        }
+            
 
         if(!empty($request->q))
         {

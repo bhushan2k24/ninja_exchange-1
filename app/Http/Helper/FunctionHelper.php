@@ -121,7 +121,7 @@ function createFormHtmlContent($formArray = [])
                                 $html .=
                                 '<div class="text-capitalize form-check form-check-primary mt-'.($childKey > 0 ? '1' : '0').'">
                                     <input type="'.$value['type'].'"  placeholder="'.$value['placeholder'].'"  name="'.$value['name'].'" value="'.$childValue['value'].'" class="form-check-input  '.$element_extra_classes.'" id="'.$value['name'].$childKey.'" '.$checked.'/>
-                                    <label class="form-check-label" for="'.$value['name'].$childKey.'">'.$childValue['label'].'</label>
+                                    <label class="form-check-label fs-09rem" for="'.$value['name'].$childKey.'">'.$childValue['label'].'</label>
                                 </div>';
                             }
                         }
@@ -234,9 +234,9 @@ function createDatatableFormFilter($formArray = [])
                                     $checked = (!empty($value['value']) && $value['value'] == $childValue['value'] ? 'checked' : '');
 
                                     $html .=
-                                    '<div class="text-capitalize form-check form-check-primary mt-'.($childKey > 0 ? '1' : '0').'">
+                                    '<div class="text-capitalize form-check form-check-primary mt-'.($childKey > 0 ? '0' : '0').'">
                                         <input type="'.$value['type'].'"  placeholder="'.$value['placeholder'].'"  name="'.$value['name'].'" value="'.$childValue['value'].'" class="form-check-input  '.$element_extra_classes.'" id="'.$value['name'].$childKey.'" '.$checked.' />
-                                        <label class="form-check-label" for="'.$value['name'].$childKey.'">'.$childValue['label'].'</label>
+                                        <label class="form-check-label fs-09rem"  for="'.$value['name'].$childKey.'">'.$childValue['label'].'</label>
                                     </div>';
                                 }
                             }
@@ -302,11 +302,20 @@ function createDatatableFormFilter($formArray = [])
 #function for pass sidebar array content ---------------
 function sideContentData($array = [])
 {
+
+    #lable shows menu name in sidebar (STRING)
+    #icon shows menu icon in sidebar (STRING)
+    #link redirection on click (STRING) 
+    #link_attribute is set attribute in link  (ARRAY) 
+    #roles is shows menu logged in user role wise (ARRAY) 
+    #childData user to create submenu (ARRAY) 
+
     $data = [
         [
             'label'=> (Auth::user()->hasRole(['admin','master'])?'dashboard':'home'),
             'link'=>'admin.dashboard',
             'icon'=>'home',
+            'roles'=> ['admin','master'],
             'childData'=>[]
         ],
         [
@@ -314,6 +323,7 @@ function sideContentData($array = [])
             'link'=>'',
             'icon'=>'trending-up',
             'open'=>'open',
+            'roles'=> ['admin','master'],
             'childData'=>[
                 [
                     'label'=>'watchlist',
@@ -362,12 +372,12 @@ function sideContentData($array = [])
                 ]
             ]
         ],
-        (Auth::user()->hasRole(['admin','master'])?
         [
             'label'=>'users',
             'link'=>'',
             'icon'=>'user',
             'open'=>'open',
+            'roles'=> ['admin','master'],
             'childData'=>[
                 [
                     'label'=>'user listing',
@@ -398,13 +408,13 @@ function sideContentData($array = [])
                     'icon'=>'circle',
                 ]
             ]
-        ]:[]),
-        (Auth::user()->hasRole(['admin','master'])?
-        ([
+        ],
+        [
             'label'=>'settings',
             'link'=>'',
             'icon'=>'sliders',
             'open'=>'',
+            'roles'=> ['admin','master'],
             'childData'=>[                
                 [
                     'label'=>'script',
@@ -443,22 +453,20 @@ function sideContentData($array = [])
                     'icon'=>'clock',
                 ]               
             ]
-        ]):[]),      
-        (Auth::user()->hasRole(['user'])?
+        ],    
         [
             'label'=>'wallet',
             'link'=>'wallet.view',
             'icon'=>'pocket',
+            'roles'=> ['user'],
             'childData'=>[]
-        ]:[]),        
+        ],        
         [
             'label'=>'Logout',
             'link'=>'admin.logout',
             'icon'=>'power',
             'childData'=>[]
         ],
-
-
     ];
 
     return $data;

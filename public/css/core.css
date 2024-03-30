@@ -18809,7 +18809,7 @@ footer.footer-border {
   box-shadow: 0 0 0 2px #fff, inset 0 0 0 1px rgba(34, 41, 47, 0.07);
 }
 .avatar-group .avatar .avatar-content {
-  background-color: #9b9ea2 !important;
+  background-color: #9b9ea2 ;
 }
 .avatar-group .avatar:hover {
   transition: all 0.25s ease;
@@ -21098,4 +21098,9 @@ tr.group {
 .offcanvas-danger .offcanvas-title {
   --bs-text-opacity: 1;
   color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
+}
+
+
+.fs-09rem {
+  font-size: 0.9rem !important;
 }

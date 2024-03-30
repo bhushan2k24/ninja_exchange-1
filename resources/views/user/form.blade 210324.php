@@ -532,11 +532,11 @@
                                 <div class="mb-1 col-12 col-md-6">
                                   <label class="form-label">Default Delivery Commission</label>
                                   <div class="input-group input-width-drop-down">
-                                  <input type="number" placeholder="Default Delivery Commission" class="form-control" name="user_market_type[{{$mcxmarketData['id']}}][default_delivery_commission]" id="user_market_type[{{$mcxmarketData['id']}}][default_delivery_commission]" >
+                                  <input type="number" placeholder="Default Delivery Commission" class="form-control" name="user_market_type[{{$mcxmarketData['id']}}][default_delivery_commission]" id="user_market_type[{{$mcxmarketData['id']}}][default_delivery_commission]"  value="{{$amount}}">
 
                                   <select  name="user_market_type[{{$mcxmarketData['id']}}][default_delivery_commission_is_percentage]" class="form-select waves-effect rounded-end" >
                                     <option value='1'>%</option>
-                                    <option value='0' >₹</option>
+                                    <option value='0'  @selected($is_percentage=='0')>₹</option>
                                   </select>
 
                                   <small class="error user_market_type{{$mcxmarketData['id']}}default_delivery_commission_is_percentage-error"></small>
@@ -550,11 +550,11 @@
                                   <label class="form-label">Default Intraday Commission</label>
                                   <div class="input-group input-width-drop-down">
 
-                                  <input type="number" placeholder="Default Intraday Commission" class="form-control" name="user_market_type[{{$mcxmarketData['id']}}][default_intraday_commission]" id="user_market_type[{{$mcxmarketData['id']}}][default_intraday_commission]"  >
+                                  <input type="number" placeholder="Default Intraday Commission" class="form-control" name="user_market_type[{{$mcxmarketData['id']}}][default_intraday_commission]" id="user_market_type[{{$mcxmarketData['id']}}][default_intraday_commission]"  value="{{$amount}}">
 
                                   <select  name="user_market_type[{{$mcxmarketData['id']}}][default_intraday_commission_is_percentage]" class="form-select waves-effect rounded-end" >
                                     <option value='1'>%</option>
-                                    <option value='0' >₹</option>
+                                    <option value='0' @selected($is_percentage=='0')>₹</option>
                                   </select>
                                   <small class="error user_market_type{{$mcxmarketData['id']}}default_intraday_commission_is_percentage-error"></small>
                                   </div>
@@ -999,16 +999,16 @@
           $('.mcx-user-scripts-commission [name*="intraday_commission"]').attr('min',brokerage_min_value);
           $('.mcx-user-default-commission [name*="intraday_commission"]').attr('min',brokerage_min_value);          
 
-          $('.mcx-user-commission [name*="intraday_commission_is_percentage"]').html(option).change();
-          $('.mcx-user-scripts-commission [name*="intraday_commission_is_percentage"]').html(option).change();
+          $('.mcx-user-commission [name*="intraday_commission_is_percentage"]').html(option);
+          $('.mcx-user-scripts-commission [name*="intraday_commission_is_percentage"]').html(option);
           $('.mcx-user-default-commission [name*="default_intraday_commission_is_percentage"] ').html(option);
 
           $('.mcx-user-commission [name*="delivery_commission"]').attr('min',brokerage_min_value);
           $('.mcx-user-scripts-commission [name*="delivery_commission"]').attr('min',brokerage_min_value);
           $('.mcx-user-default-commission [name*="delivery_commission"]').attr('min',brokerage_min_value);          
 
-          $('.mcx-user-commission [name*="delivery_commission_is_percentage"]').html(option).change();;
-          $('.mcx-user-scripts-commission [name*="delivery_commission_is_percentage"]').html(option).change();
+          $('.mcx-user-commission [name*="delivery_commission_is_percentage"]').html(option);
+          $('.mcx-user-scripts-commission [name*="delivery_commission_is_percentage"]').html(option);
           $('.mcx-user-default-commission [name*="default_delivery_commission_is_percentage"] ').html(option);
 
       }
@@ -1101,18 +1101,18 @@
 
           $(this).change();
       });
-      $(document).on('change','[name*="_is_percentage"]', function() {      
-          var inputValue = $(this).closest('.input-group').find('input[type="number"]');
-          if ($(this).val() == "1") {
-            // If selected value is %
-            inputValue.attr('max', '100'); // Set max value to 100
-          } else {
-            // If selected value is ₹
-            inputValue.removeAttr('max'); // Remove max value attribute
-          }
+      $(document).on('change','[name*="_is_percentage"]', function() {       
+        var inputValue = $(this).closest('.input-group').find('input[type="number"]');
+        if ($(this).val() == "1") {
+          // If selected value is %
+          inputValue.attr('max', '100'); // Set max value to 100
+        } else {
+          // If selected value is ₹
+          inputValue.removeAttr('max'); // Remove max value attribute
+        }
       });
 
-      $('[name*="_is_percentage"]:not([name*="default_delivery_commission_is_percentage"]):not([name*="default_intraday_commission_is_percentage"])').change();
+      $('[name*="_is_percentage"]').change();
   });
 
     

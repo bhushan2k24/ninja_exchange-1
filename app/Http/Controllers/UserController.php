@@ -6,8 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Administrator;
 use App\Models\Nex_user_market_detail;
+use App\Models\Nex_master_market_detail;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Nex_Market;
+use App\Models\Nex_script;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +20,7 @@ class UserController extends Controller
     // user data type wise module ---------------
     public function index($type = 'user')
     {
-        $file['breadcrumbs'] = [['link' => "/", 'name' => "Home"], ['link' => "javascript:void(0)", 'name' => "User"], ['name' => ucwords("$type list")]];        
+        $file['breadcrumbs'] = [['link' => "/", 'name' => "Home"], ['link' => "javascript:void(0)", 'name' => "Users"], ['name' => ucwords("$type list")]];        
 
 
         $file['title'] = ucwords("$type list");
@@ -36,7 +38,7 @@ class UserController extends Controller
                     'name'=>'borker_id',
                     'validation'=>'',
                     'grid'=>3,
-                    'data'=>userData('broker'),
+                    'data'=>[],
                     'outer_div_classes'=>'mb-0',
                     'element_extra_classes'=>'select2-ajax-user_dropdown',
                     'element_extra_attributes'=>' data-type="broker" '
@@ -48,7 +50,7 @@ class UserController extends Controller
                     'name'=>'master_id',
                     'validation'=>'',
                     'grid'=>3,
-                    'data'=>userData('master'),
+                    'data'=>[],
                     'outer_div_classes'=>'mb-0',
                     'element_extra_classes'=>'select2-ajax-user_dropdown',
                     'element_extra_attributes'=>' data-type="master" '
@@ -60,7 +62,7 @@ class UserController extends Controller
                     'name'=>'client_id',
                     'validation'=>'',
                     'grid'=>3,
-                    'data'=>userData('master'),
+                    'data'=>[],
                     'outer_div_classes'=>'mb-0',
                     'element_extra_classes'=>'select2-ajax-user_dropdown',
                     'element_extra_attributes'=>' data-type="user" '
@@ -150,7 +152,7 @@ class UserController extends Controller
                 ],
             ],
         ];
-
+        
         if ($type != 'user') {
             unset($file['userListFormData']['fieldData'][0]);
             unset($file['userListFormData']['fieldData'][1]);
@@ -162,14 +164,17 @@ class UserController extends Controller
     // user form module ---------------
     public function form($id = 0)
     {
-        // if(Auth::user()->hasRole(['broker','user']))
+        // if(Auth::user()->hasRole(['broker','user']) || Auth::user()->is_last_master)
         //     abort(404);
+        // dd(AllowedMarketIds(decrypt_to($id)));
+        
+        $title = ucwords(($id>0?"Edit":"Add")." Account");
+        $breadcrumbs = [['link' => "/", 'name' => "Home"], ['link' => "javascript:void(0)", 'name' => "Users"], ['name' => $title]];
 
-        $title = ucwords(($id>0?"Edit":"Create")." Account");
-        $breadcrumbs = [['link' => "/", 'name' => "Home"], ['link' => "javascript:void(0)", 'name' => "User"], ['name' => $title]];
-
-        $userData = Administrator::find(decrypt_to($id));
-
+        $userData = Administrator::find(decrypt_to($id));   
+        // dd($userData->parent->userMaxLimit(['market_name'=>'MCXFUT']));
+        
+        // dd( $userData->formatted_market_data);
         if($id!=0 && is_null($userData))
             abort(404);
 
@@ -177,10 +182,14 @@ class UserController extends Controller
         {
             // if($userData->hasRole(['admin']) || (Auth::user()->hasRole('admin') && !$userData->hasRole(['master'])) || (Auth::user()->hasRole('master') && !$userData->hasRole(['master','broker','user']))) 
             //     abort(404);
+            // Auth::user()->is_last_master
 
         }
 
-        return view('user.form', compact('title', 'id', 'breadcrumbs', 'userData'));        
+        $parant_data = ($userData)?$userData->parent:Auth::user();
+
+
+        return view('user.form', compact('title', 'id', 'breadcrumbs', 'userData', 'parant_data'));        
     }
     // ---------------
     #----------------------------------------------------------------
@@ -188,30 +197,52 @@ class UserController extends Controller
     # Store User-----------------------------------------
     public function StoreUsers(Request $request)
     {
+
         if(Auth::user()->hasRole(['broker','user']))
             abort(404);
 
         $validator = Validator::make($request->all(), [
-                    'user_type' => (Auth::user()->hasRole('admin') ? 'required|in:master' : 'required|in:master,broker,user'),
+                    'user_type' => (Auth::user()->hasRole('admin') ? 'required|in:master,user' : 'required|in:master,broker,user'),
                     'name' => 'required',
-                    'mobile' => [
-                        'required','regex:/^([0-9\s\-\+\(\)]*)$/','min:10',
-                        function ($attribute, $value, $fail) {
-                            $exists = Administrator::where('mobile', encrypt_to($value))->exists();
-                            if ($exists)
-                                $fail('The '.$attribute.' has already been taken.');
-                        },
-                    ],
+                    // 'mobile' => [
+                    //     'required','regex:/^([0-9\s\-\+\(\)]*)$/','min:10','max:16',
+                    //     function ($attribute, $value, $fail) use ($request) {
+
+                    //         $exists = Administrator::where('mobile', encrypt_to($value));
+                    //         if(!empty($request->id))
+                    //             $exists->where('id','!=',decrypt_to($request->id));
+
+                    //         if ($exists->exists())
+                    //             $fail('The '.$attribute.' has already been taken.');
+                    //     },
+                    // ],
                     // 'mobile' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:Administrators',
                     // 'email' => 'required|unique:Administrators',
-                    'password' => 'required'
+                    'password' => [function ($attribute, $value, $fail) use ($request) {
+                                if(empty($request->id) && empty($value))
+                                    $fail('The '.$attribute.' field is required');
+                            }]
                 ]); 
         if ($validator->fails()) 
             return faildResponse(['Message'=>'Validaiton Warning', 'Data'=>$validator->errors()->toArray()]);
 
         $validationArray = [];
+
+        
+        if($request->user_type == 'user')
+        {
+            
+        }
+
         if($request->user_type == 'master')
         {
+            if(Auth::user()->hasRole(['master']) && empty($request->id))
+            {
+                if(Auth::user()->remaining_master_limit<=0)
+                {
+                    return faildResponse(['Message'=>'Master creation limit reached. Unable to generate more!', 'Data'=>['name'=>['Master creation limit reached. Unable to generate more!']]]);
+                }
+            }
             $validationArray = [
                 'master_account_type_ids'=>'required',
                 'partnership' => 'required||numeric|between:0,101',
@@ -243,28 +274,31 @@ class UserController extends Controller
             }
         }
 
-        // dd($request->all());
-        $user = Administrator::create([
+        $user = Administrator::find(decrypt_to($request->id));
+        $userSaveData = [
             'name' => $request->name,
-            'mobile' => encrypt_to($request->mobile),
+            // 'mobile' => encrypt_to($request->mobile),
+            'mobile' => encrypt_to(rand(1111111111,9999999999)),
             'email' => encrypt_to($request->email),
-            'username' => str_replace(' ','',$request->name),
-            'usercode' => $request['mobile'],
-            'referral_token' => str_replace(' ','',$request->name),
+            'username' => str_replace(' ','',$request->name).rand(111111,999999),
+
+            'usercode' => rand(111111,999999),
+            'referral_token' => str_replace(' ','',$request->name).rand(111,999),
             'parent_id' => Auth::id(),
-            'referrer_id' => Auth::id(),
-            'password' => bcrypt($request->password),
-            'user_position' => $request->user_type,
+            'referrer_id' => Auth::id(),                    
+            'password' => bcrypt($request->password),            
+            'user_position' => $request->user_type,            
             'registered_ip' => $request->ip(),
 
-            'partnership' => $request->partnership ?: 0,
+            'partnership' => $request->partnership ?: 0,            
             'min_lot_wise_brokerage' => $request->min_lot_wise_brokerage ?: 0,
             'min_lot_wise_brokerage_is_percentage' => $request->min_lot_wise_brokerage_is_percentage?:1,
             'min_amount_wise_brokerage' => $request->min_amount_wise_brokerage ?:0,
             'min_amount_wise_brokerage_is_percentage' => $request->min_amount_wise_brokerage_is_percentage?:1 ,
             
             'max_intraday_multiplication' => $request->max_intraday_multiplication ?: 0,
-            'max_delivery_multiplication' => $request->max_delivery_multiplication ?: 0,
+            'max_delivery_multiplication' => $request->max_delivery_multiplication ?: 0,            
+            'master_creation_limit' => $request->master_creation_limit ?: '0',  
             
             'order_outside_of_high_low' => $request->order_outside_of_high_low ?: '0',
             'apply_auto_square' => $request->apply_auto_square ?: 1,
@@ -276,39 +310,174 @@ class UserController extends Controller
             'close_alert_margin' => $request->close_alert_margin ?: '0',
             'user_account_type_id' => $request->user_account_type_id ?:'0',
             'margin_limit' => $request->margin_limit ?: '0',
-
+            
             'user_remark' => $request->user_remark,
-        ]);
-        $usercode = strlen($user->id)>=6 ? $user->id : (str_pad(rand(1, 9999), (6-(strlen($user->id)>6 ? 6 : strlen($user->id))), '0', STR_PAD_RIGHT)).$user->id;
+        ];
 
-        $user->update(['referral_token'=>"NXCREF".numberToCharacterString($user->id),
-                        'usercode'=>$usercode]);
-
-        $user->assignRole($request->user_type);
-
-        if(in_array($request->user_type,['broker','user']))
-            return successResponse(['Message'=>'Success!', 'Data'=>[],'Redirect'=>route('view.user-list',[$request->user_type])]);
-        
-        if($request->user_type =='master')
+        if(!empty($request->id))
         {
-            $user->update(['master_account_type_ids'=>json_encode((is_array($request->master_account_type_ids)
-                ?$request->master_account_type_ids:[$request->master_account_type_ids]))]);
+           unset($userSaveData['usercode']);
+           unset($userSaveData['referral_token']);
+           unset($userSaveData['parent_id']);
+           unset($userSaveData['referrer_id']);
+           unset($userSaveData['password']);
+           unset($userSaveData['user_position']);
+           unset($userSaveData['registered_ip']);
+        }
+        if(!Auth::user()->hasRole(['admin']))
+            unset($userSaveData['master_creation_limit']);        
 
-            foreach ($request->market_type_value as $m_tkey => $m_tvalue) 
+        $user = Administrator::updateOrCreate(['id'=>decrypt_to($request->id)],$userSaveData);        
+        // $user->save($userSaveData);
+        
+        if(empty($request->id))
+        {
+            $usercode = strlen($user->id)>=6 ? $user->id : (str_pad(rand(1, 9999), (6-(strlen($user->id)>6 ? 6 : strlen($user->id))), '0', STR_PAD_RIGHT)).$user->id;
+
+            $user->update(['referral_token'=>"NXCREF".numberToCharacterString($user->id),
+                            'usercode'=>$usercode]);
+            $user->assignRole($request->user_type);
+        }
+        
+        if($user->hasRole(['broker']))
+            return successResponse(['Message'=>'Success!', 'Data'=>[],'Redirect'=>route('view.user',[$user->getRoleNames()->first()])]);            
+
+        if($user->hasRole(['user']))
+        {
+            Nex_user_market_detail::where('user_id', $user->id)->delete();
+
+            $user_market_type_value = is_array($request->user_market_type_value)?$request->user_market_type_value :[$request->user_market_type_value];
+
+            foreach ($user_market_type_value as $m_tkey => $m_tvalue) 
             {
-                $marketData = marketData($m_tvalue);
+                $marketData = marketData(['id'=>$m_tvalue,'user_id'=>$user->id,'need_user_parent_market'=>1]);
                 if(is_null($marketData))
-                    continue;                  
+                    continue;
+                
+                $marketData = (object)$marketData;
+                if(!empty($request->user_market_type[$m_tvalue]))
+                {
+                    foreach ($request->user_market_type[$m_tvalue] as $k => $v)
+                    {      
+                        if(strpos($k,'_is_percentage'))
+                         continue;   
+
+                        $v = ($k == 'commission_type')?($v=='script_wise'?1:2): (($k == 'brokerage_type') ? ($v=='amount_wise'?1:2) :$v);
+
+
+                        // if(isset($request->user_market_type[$m_tvalue]['commission_type']) && $request->user_market_type[$m_tvalue]['commission_type'] == 'script_wise' && in_array($k,['delivery_commission','delivery_commission_is_percentage','intraday_commission','intraday_commission_is_percentage']) )
+                        //     continue;
+                        // elseif(isset($request->user_market_type[$m_tvalue]['commission_type']) && $request->user_market_type[$m_tvalue]['commission_type'] != 'script_wise'&& in_array($k,['default_delivery_commission','default_delivery_commission_is_percentage','default_intraday_commission','default_intraday_commission_is_percentage']))
+                        //     continue;       
+                      
+                        if($k == 'user_script_wise_commission')
+                        {                                                   
+                            foreach($v  as $script_k => $scriptv)
+                            {
+                                $scriptsData = Nex_script::select('*')->where('id',$script_k)->where('market_id',$m_tvalue)->first();
+                                
+                                if(is_null($scriptsData))
+                                    continue;
+
+                                foreach ($scriptv as $scriptv_key => $scriptv_value)
+                                {                                                
+                                    if(strpos($scriptv_key,'_is_percentage'))
+                                        continue; 
+                                    
+                                    $is_percentage = (in_array($scriptv_key,['delivery_commission','intraday_commission']) ? $scriptv[$scriptv_key.'_is_percentage']: '0');
+
+                                    $user_market_detail = Nex_user_market_detail::updateOrInsert(
+                                        [   
+                                            'user_id' => $user->id, 
+                                            'market_id' => $m_tvalue,
+                                            'market_name' => $marketData->market_name,
+                                            'market_field' => $scriptv_key,
+                                            'script_id' => $scriptsData->id,
+                                        ],
+                                        [
+                                            'user_id' => $user->id, 
+                                            'market_id' => $m_tvalue,
+                                            'market_name' => $marketData->market_name,
+                                            'market_field' => $scriptv_key,
+                                            'market_field_amount' => $scriptv_value??'0',
+                                            'amount_is_percentage' => $is_percentage,
+                                            'script_id' => $scriptsData->id,
+                                            'script_name' => $scriptsData->script_name,
+                                        ]
+                                    );
+                                }
+                            }
+                            continue;
+                        }   
+
+                        $is_percentage = (in_array($k,['delivery_commission ','intraday_commission','default_delivery_commission','default_intraday_commission']) ? $request->user_market_type[$m_tvalue][$k.'_is_percentage']: '0');  
+                    
+                        $user_market_detail = Nex_user_market_detail::updateOrInsert(
+                            [   
+                                'user_id' => $user->id, 
+                                'market_id' => $m_tvalue,
+                                'market_name' => $marketData->market_name,
+                                'market_field' => $k
+                            ],
+                            [
+                                'user_id' => $user->id, 
+                                'market_id' => $m_tvalue,
+                                'market_name' => $marketData->market_name,
+                                'market_field' => $k,
+                                'market_field_amount' => $v??'0',
+                                'amount_is_percentage' => $is_percentage,
+                                'script_id' => '0',
+                                'script_name' => null,
+                            ]
+                        );
+                    }
+                }
+                else
+                {
+                    $user_market_detail = Nex_user_market_detail::updateOrInsert(
+                        [   'user_id' => $user->id, 
+                            'market_id' => $m_tvalue,
+                            'market_name' => $marketData->market_name
+                        ],
+                        [
+                            'user_id' => $user->id, 
+                            'market_id' => $m_tvalue,
+                            'market_name' => $marketData->market_name,
+                            'amount_is_percentage' => '0',
+                            'script_id' => '0',
+                            'script_name' => '',
+                        ]);
+                }
+            }
+        }
+        elseif($user->hasRole(['master']))
+        {
+            Nex_master_market_detail::where('user_id', $user->id)->delete();
+
+            $user->update(['master_account_type_ids'=>(is_array($request->master_account_type_ids)
+                ?$request->master_account_type_ids:[$request->master_account_type_ids])]);
+
+            $market_type_value = is_array($request->market_type_value)?$request->market_type_value :[$request->market_type_value];
+
+              
+            foreach ($market_type_value as $m_tkey => $m_tvalue) 
+            { 
+                $marketData = marketData(['id'=>$m_tvalue,'user_id'=>$user->id,'need_user_parent_market'=>1]);
+                if(empty($marketData))
+                    continue;
+
+                $marketData =  (object)$marketData;
+                
                 if(!empty($request->market_type[$m_tvalue]))
                 {
+                    
                     foreach ($request->market_type[$m_tvalue] as $k => $v)
                     {                        
                         if(strpos($k,'_is_percentage'))
                             continue;
 
                         $is_percentage = (in_array($k,['amount_wise_brokerage','lot_wise_brokerage']) ? $request->market_type[$m_tvalue][$k.'_is_percentage']: '0');
-
-                        Nex_user_market_detail::updateOrInsert(
+                        $user_market_detail = Nex_master_market_detail::updateOrInsert(
                             [   
                                 'user_id' => $user->id, 
                                 'market_id' => $m_tvalue,
@@ -328,7 +497,7 @@ class UserController extends Controller
                 }
                 else
                 {
-                    $user_market_detail = Nex_user_market_detail::updateOrInsert(
+                    $user_market_detail = Nex_master_market_detail::updateOrInsert(
                     [   'user_id' => $user->id, 
                         'market_id' => $m_tvalue,
                         'market_name' => $marketData->market_name
@@ -343,7 +512,8 @@ class UserController extends Controller
                 }
             }
         }  
-        return successResponse(['Message'=>'Success!', 'Data'=>[],'Redirect'=>route('view.user-list',[$request->user_type])]);
+        return successResponse(['Message'=>'Success!', 'Data'=>[]]);
+        return successResponse(['Message'=>'Success!', 'Data'=>[],'Redirect'=>route('view.user',[$user->getRoleNames()->first()])]);
     }
     #----------------------------------------------------------------
 
@@ -544,7 +714,7 @@ class UserController extends Controller
             $Initials = getInitials($user->name);
             $randomState = getRandomColorState();
 
-            $user_parent_profile = '<span class="avatar-content">'.$Initials.'</span>';
+            $user_parent_profile = '<span class="avatar-content bg-'.$randomState.'">'.$Initials.'</span>';
 
             $user_parent_profile = url_file_exists(URL.USER.$user->profile_picture)?                
             '<img src="'.URL.USER.$user->profile_picture.'" alt="'.$user->name.'" height="32" width="32">':$user_parent_profile;
@@ -590,34 +760,37 @@ class UserController extends Controller
             return response()->json([]);   
 
         $Data = Administrator::role($request->user_position);
-        
+
+        $DataForUser = Administrator::find(($request->parent?decrypt_to($request->parent):Auth::id())); 
         // if(!Auth::user()->hasRole('admin'))
         //  $Data->where('parent_id', Auth::id()); 
         
-        if(Auth::user()->hasRole('master'))
-            $Data->where('parent_id', Auth::id());           //user|broker|master          
-        elseif(Auth::user()->hasRole('user'))
+        if($DataForUser->hasRole('master'))
         {
-            // $Data->where('parent_id', Auth::user()->parent_id);
+            // $Data->where('parent_id', Auth::id());           //user|broker|master            
+            $Data->whereIn('parent_id', [$DataForUser->id, ...Administrator::role('master')->where('parent_id',$DataForUser->id)->pluck('id')]);              
+        }           
+        elseif($DataForUser->hasRole('user'))
+        {
+            // $Data->where('parent_id', Auth::user()->parent_id);7
             if($request->user_position=='user')
-                $Data->where('id', Auth::id());
+                $Data->where('id', $DataForUser->id);
             elseif($request->user_position=='master')
-                $Data->where('id', Auth::user()->parent_id);
+                $Data->where('id', $DataForUser->parent_id);
             elseif($request->user_position=='broker')
-                $Data->where('id', Auth::user()->user_broker_id);
+                $Data->where('id', $DataForUser->user_broker_id);
 
         }            
-        elseif(Auth::user()->hasRole('broker'))
+        elseif($DataForUser->hasRole('broker'))
         {
             // $Data->where('parent_id', Auth::user()->parent_id)->where('user_broker_id',Auth::id());
             if($request->user_position=='user')
-                $Data->where('user_broker_id', Auth::id());
+                $Data->where('user_broker_id', $DataForUser->id);
             elseif($request->user_position=='master')
-                $Data->where('id', Auth::user()->parent_id);
+                $Data->where('id', $DataForUser->parent_id);
             elseif($request->user_position=='broker')
-                $Data->where('id', Auth::id());
-        }
-            
+                $Data->where('id', $DataForUser->id);
+        }            
 
         if(!empty($request->q))
         {

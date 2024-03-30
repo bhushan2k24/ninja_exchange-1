@@ -24,7 +24,7 @@ class Administrator extends Authenticatable
         'master_account_type_ids' => 'array'
     ];
     protected $hidden = ['password','usercode','registered_ip','mobile','email','roles','remaining_master_limit']; 
-    protected $appends = ['user_delivery_multiplication','user_intraday_multiplication','user_parent','user_broker','formatted_market_data','remaining_master_limit'];   
+    protected $appends = ['user_delivery_multiplication','user_intraday_multiplication','user_parent','user_broker','formatted_market_data','remaining_master_limit','is_last_master'];   
  
     # Accessor for getting the parent name
     public function getUserParentAttribute()
@@ -47,6 +47,50 @@ class Administrator extends Authenticatable
         return $intraday_multi<=0 ? 1 : $intraday_multi;
     }
 
+    # Get User user is last master from parent(master)
+     protected function getIsLastMasterAttribute() {
+        return $this->isLastMaster();
+    }
+
+    #function for get allowed market ids 
+    public function AllowedMarketIds($user_id=0,$parentMarket=0)
+    {
+        $user_id = $user_id!=0?$user_id: $this->id;
+        $userData = Administrator::find($user_id);    
+        
+        $userData = $parentMarket!=0 && !$userData->hasRole('admin') ? $userData->user_parent : $userData;  
+        $getMasketIds = Nex_Market::select('id as market_id')->where('market_status','active');
+
+        if($userData->hasRole('master'))
+        {
+            $getMasketIds = Nex_master_market_detail::select('market_id')->where('user_id',$userData->id)->groupBy('market_id');
+            if($userData->is_last_master)
+                $getMasketIds->whereIn('market_id',$this->AllowedMarketIds($userData->parent_id));
+        }
+        elseif($userData->hasRole('user'))
+        {
+            $getMasketIds = Nex_user_market_detail::select('market_id')->where('user_id',$userData->id)->groupBy('market_id');
+            $getMasketIds->whereIn('market_id',$this->AllowedMarketIds($userData->parent_id));
+        }
+        
+        return  $getMasketIds->get()->pluck('market_id')->toArray();
+    }
+    #--------------------------------------------    
+    #-----------------------------------------------------
+    // function for return setting content
+    public function get_levels($id = 0){
+
+        $get_levels = Nex_Level::select('*');
+
+        if($this->UserParent && !$this->UserParent->hasRole(['admin']))
+            $get_levels->whereIn('id',$this->UserParent->master_account_type_ids);
+        
+        if($id>0)
+            return $get_levels->where('id',$id)->first();
+        
+        return $get_levels->get();
+    } 
+
 
     # Accessor for getting the parent name
     public function getUserBrokerAttribute()
@@ -60,7 +104,7 @@ class Administrator extends Authenticatable
     # Accessor to get the Remaining Master Limit
     public function getRemainingMasterLimitAttribute()
     {
-      $TotalMasterCreated = $this->hasMany(Administrator::class, 'parent_id', 'id')
+      $TotalMasterCreated = $this->hasMany(Administrator::class, 'parent_id', 'id')->role('master')
       ->where('parent_id', $this->id)
       ->count();  
         return  ($this->master_creation_limit - $TotalMasterCreated) ;
@@ -79,7 +123,7 @@ class Administrator extends Authenticatable
  
          if ($role !== null) {
              // Adjust the condition based on the provided parameter
-             $query->role($role);
+            return $query->role($role)->count();
          }
  
          return $query->role('master')->count();
@@ -148,7 +192,7 @@ class Administrator extends Authenticatable
 
     public function users() 
     {
-        return $this->hasMany(Administrator::class, 'admin_id')->role('user');
+        return $this->hasMany(Administrator::class, 'parent_id')->role('user');
     }
 
     public function isAdmin()
@@ -166,31 +210,110 @@ class Administrator extends Authenticatable
         return $this->hasRole('broker');
     }
 
-    public function marketDetails()
+    public function isLastMaster()
+    {
+        $isLastMaster = Administrator::role('admin')
+                            ->whereIn('id',[$this->parent_id,$this->id])
+                            ->exists();
+        return !$isLastMaster;
+    }
+
+    public function MasterMarketDetails()
+    {
+        return $this->hasMany(Nex_master_market_detail::class, 'user_id');
+    }
+    
+    public function UserMarketDetails()
     {
         return $this->hasMany(Nex_user_market_detail::class, 'user_id');
     }
 
-    public function getformattedMarketDataAttribute ()
+    public function getformattedMarketDataAttribute()
     {
         $formattedData = [];
-        foreach ($this->marketDetails as $data) {
+
+        $markertDetails = $this->hasRole('user')? $this->UserMarketDetails:$this->MasterMarketDetails;
+        
+        foreach ($markertDetails as $data) {
+
+            if(!in_array($data->market_id, $this->AllowedMarketIds()))
+                continue;
+
             $marketId = $data->market_id;
             $marketField = $data->market_field;
             $marketName = $data->market_name;
             $marketFieldAmount = $data->market_field_amount;
             $amountIsPercentage = $data->amount_is_percentage;
+            $script_id = !empty($data->script_id)?$data->script_id:0;
 
             $formattedData[$marketId]['market_name'] = $marketName;
             $formattedData[$marketId][$marketField] = [
                 'market_field' => $marketField,
                 'market_field_amount' => $marketFieldAmount,
-                'amount_is_percentage' => $amountIsPercentage,
+                'amount_is_percentage' => $amountIsPercentage
             ];
-        }
+            if($script_id>0)
+            {
+                $formattedData[$marketId]['script_data'][$script_id][$marketField] =                 
+                [
+                    'market_field' => $marketField,
+                    'market_field_amount' => $marketFieldAmount,
+                    'amount_is_percentage' => $amountIsPercentage
+            
+                ];
+            }
+        }       
 
         return $formattedData;
     }
+
+    #function for get user max amount limit
+    public function userMaxLimit($Arr=['user_id'=>0,'market_id'=>0,'market_name'=>0,'isParentData'=>0])
+    {
+        $user_id = !empty($Arr['user_id'])?$Arr['user_id']:$this->id;
+        $market_id = !empty($Arr['market_id'])?$Arr['market_id']:0;
+        $market_name = !empty($Arr['market_name'])?$Arr['market_name']:'';
+        $isParentData = !empty($Arr['isParentData'])?$Arr['isParentData']:0;
+
+        $userData = Administrator::find($user_id);     
+        $userData = $isParentData!=0 && !$userData->hasRole('admin') ? $userData->user_parent : $userData;
+        $markertDetails = $userData->hasRole('user')? $userData->UserMarketDetails:$userData->MasterMarketDetails;
+        
+        $getMasket = Nex_Market::select('id as market_id','market_user_required_fields','user_required_fields')->where('market_status','active')
+        ->where(function($query) use ($market_id, $market_name) {
+            $query->where('id', $market_id)
+                  ->orWhere('market_name', $market_name);
+        })->first();
+        
+        if(!$getMasket->exists() || !in_array($getMasket->market_id, $userData->AllowedMarketIds())) 
+            return [];
+
+        $getMarket_detail = collect();
+
+        if($userData->hasRole('master'))
+            $getMarket_detail = Nex_master_market_detail::select('*')->where('user_id',$userData->id)->where('market_id',$getMasket->market_id)->whereIn('market_field',$getMasket->market_user_required_fields)->get();
+        elseif($userData->hasRole('user'))
+            $getMarket_detail = Nex_user_market_detail::select('*')->where('user_id',$userData->id)->where('market_id',$getMasket->market_id)->whereIn('market_field',$getMasket->user_required_fields)->get();
+       
+        if($getMarket_detail->isEmpty())
+            return [];
+
+        $marketDetails = [];
+        foreach ($getMarket_detail->toArray() as $detail) {
+            
+            $marketDetails[$detail['market_field']] = $detail;
+
+            if(in_array($detail['market_field'] , ['amount_wise_brokerage','lot_wise_brokerage']))
+            {
+                $field = $detail['market_field'] == 'amount_wise_brokerage'? 'amount_wise_delivery_commission' : 'lot_wise_delivery_commission';
+                $marketDetails[$field] = $detail;
+                $field = $detail['market_field'] == 'amount_wise_brokerage'? 'amount_wise_intraday_commission' : 'lot_wise_intraday_commission';
+                $marketDetails[$field] = $detail;
+            }
+        }
+        return  $marketDetails;
+    }
+     #--------------------------------------------    
 
     // public function siblings() {
     //     return $this->hasMany(Administrator::class, 'parent_id', 'id')
@@ -203,8 +326,8 @@ class Administrator extends Authenticatable
     //     });
     // }
 
-    public function getVariantsAttribute() {
-        $siblings = $this->getAllDescendants($this->id)->reject(function($elem) {
+    public function getVariantsAttribute($role) {
+        $siblings = $this->getAllDescendants($this->id,$role)->reject(function($elem) {
            return $elem->id == $this->id;
         });
     
@@ -213,14 +336,18 @@ class Administrator extends Authenticatable
         });
     }
     
-    protected function getAllDescendants($parentId) {
+    protected function getAllDescendants($parentId = 0 ,$role = 'master') {
+
+        $parentId = $parentId==0 ? $this->id : $parentId; 
+
         $descendants = $this->hasMany(Administrator::class, 'parent_id', 'id')
+                            ->role($role)
                             ->where('id', '!=', $this->id)
                             ->where('parent_id', $parentId)
                             ->get();
     
         foreach ($descendants as $descendant) {
-            $descendant->children = $this->getAllDescendants($descendant->id);
+            $descendant->children = $this->getAllDescendants($descendant->id,$role);
         }
     
         return $descendants;

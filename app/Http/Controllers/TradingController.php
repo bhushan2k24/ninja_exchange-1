@@ -24,7 +24,7 @@ class TradingController extends Controller
     public function watchList()
     {
         $file['title'] = 'WatchList';        
-        $file['marketdata'] = marketdata(0,0,1);
+        $file['marketdata'] = marketdata(['only_stock_trading'=>1]);
         
         $watchlist_data=Nex_watchlist::select('id','market_id','watchlist_market_name','watchlist_trading_symbol','watchlist_script_extension')->where('user_id',Auth::id())->orderBy('market_id')->get();
 

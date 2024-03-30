@@ -5,25 +5,68 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Nex_Setting;
 use App\Models\Nex_Level;
 use App\Models\Nex_Market;
+use App\Models\Nex_master_market_detail;
 use App\Models\Nex_script;
+use App\Models\Nex_user_market_detail;
+use Illuminate\Support\Facades\Auth;
 
 #function for get form element data ---------------
 function getFormContentData($form_name = 'login-form')
 {
     return DB::table('nex_user')->select('*')->get();
 }
-#---------------
+#-------------------------------------------------
 
+#function for get allowed market ids ---------------
+function AllowedMarketIds($user_id=0,$parentMarket=0)
+{
+    $user_id = $user_id!=0?$user_id:Auth::id();
+    $userData = Administrator::find($user_id);    
+    
+    $userData = $parentMarket!=0 && !$userData->hasRole('admin') ? $userData->user_parent : $userData;
+    $getMasketIds = Nex_Market::select('id as market_id')->where('market_status','active');
+
+    if($userData->hasRole('master'))
+    {
+        $getMasketIds = Nex_master_market_detail::select('market_id')->where('user_id',$userData->id)->groupBy('market_id');
+        if($userData->is_last_master)
+            $getMasketIds->whereIn('market_id',AllowedMarketIds($userData->parent_id));
+    }
+    elseif($userData->hasRole('user'))
+    {
+        $getMasketIds = Nex_user_market_detail::select('market_id')->where('user_id',$userData->id)->groupBy('market_id');
+        $getMasketIds->whereIn('market_id',AllowedMarketIds($userData->parent_id));
+    }
+    // join
+    return  $getMasketIds->get()->pluck('market_id')->toArray();
+}
+#--------------------------------------------
 #function for get market data ---------------
-function marketData($id=0,$with_non_trading_market=0,$only_stock_trading=0,$market_name='')
+// function marketData($id=0,$with_non_trading_market=0,$only_stock_trading=0,$market_name='')
+function marketData($FilterMarket = [])
 {
 
-    $get_market = Nex_Market::select('*')->addSelect('market_name as label', 'id as value')->where('market_status','active');
+    $FilterMarket = ['id'=>$FilterMarket['id']??0,
+                    'with_non_trading_market'=>$FilterMarket['with_non_trading_market']??0,
+                    'only_stock_trading'=>$FilterMarket['only_stock_trading']??0,
+                    'market_name'=>$FilterMarket['market_name']??'',
+                    'user_id'=>$FilterMarket['user_id']??Auth::id(),
+                    'need_user_parent_market'=>$FilterMarket['need_user_parent_market']??0,
+                ];        
+                
+    extract($FilterMarket);
+
+    $get_market = Nex_Market::select('*')->addSelect('market_name as label', 'id as value')->where('market_status','active')->whereIn('id',AllowedMarketIds($user_id,$need_user_parent_market));
     if($id>0)
-        return $get_market->where('id',$id)->first()->toArray();
+    {
+        $result = $get_market->where('id', $id)->first();       
+        return $result ? $result->toArray() : [];
+    }        
     if($market_name!='')
-        return $get_market->where('market_name',$market_name)->first()->toArray();
-   
+    {
+        $result = $get_market->where('market_name',$market_name)->first();
+        return $result ? $result->toArray() : [];
+    }   
     if($only_stock_trading>0)
         return $get_market->where('market_type','stock_trading')->get()->toArray();
     elseif($with_non_trading_market>0)

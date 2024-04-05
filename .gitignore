@@ -1,4 +1,4 @@
-#/node_modules
+/node_modules
 # /public/hot
 # /public/data
 # /public/fonts
@@ -9,7 +9,7 @@
 # /public/css-rtl
 # /public/vendors
 # /storage/*.key
-#/vendor
+/vendor
 # .env
 # .env.backup
 # .phpunit.result.cache
@@ -20,4 +20,3 @@
 # /vuexy-shell-scripts
 # supervisord.log
 # supervisord.pid
-node_modules

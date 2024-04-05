@@ -135,7 +135,17 @@ class ScriptImport implements ToModel,WithHeadingRow,WithChunkReading,WithEvents
 
     public function registerEvents(): array
     {
-        return [        
+        return [    
+            \Maatwebsite\Excel\Events\ImportFailed::class => function(\Maatwebsite\Excel\Events\ImportFailed $event) {
+
+                cache(["import_script_end_date" => now()], now()->addMinutes(10));                
+                
+                cache()->forget("import_script_total_rows");
+                cache()->forget("import_script_start_date");
+                cache()->forget("import_script_current_row");
+                cache()->forget("all_import_status_error");
+                
+            },    
             \Maatwebsite\Excel\Events\BeforeImport::class => function (\Maatwebsite\Excel\Events\BeforeImport $event) {
                 $totalRows = $event->getReader()->getTotalRows();
                 cache()->forget("import_script_end_date");

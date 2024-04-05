@@ -38,7 +38,7 @@
                   </g>
                 </g>
               </svg></span>
-            <h2 class="brand-text mb-0">Vuexy</h2>
+            <h2 class="brand-text mb-0">{{setting('site_name')}}</h2>
           </a>
         </li>
       </ul>
@@ -55,24 +55,24 @@
     </ul>
       <div class="avatar bg-light-success rounded me-1">
           <div class="avatar-content ">
-              <i data-feather="trending-up" class="avatar-icon font-medium-3 NFOBANKNIFTY-IPriceChangeicon"></i>
+              <i data-feather="trending-up" class="avatar-icon font-medium-3 BANKNIFTY-IPriceChangeicon"></i>
           </div>
       </div>
       <div class="user-nav d-sm-flex d-none">
         <div class="my-auto">
-            <h5 class="fw-bolder mb-0 NFOBANKNIFTY-IBuyPrice">00,000.00</h5>
+            <h5 class="fw-bolder mb-0 BANKNIFTY-IBuyPrice">00,000.00</h5>
             <p class="card-text font-small-3 mb-0 ">BANK NIFTY</p>
         </div>
       </div>
 
       <div class="avatar bg-light-danger rounded me-1 ms-2">
         <div class="avatar-content ">
-            <i data-feather="trending-down" class="avatar-icon font-medium-3 NFONIFTY-IPriceChangeicon"></i>
+            <i data-feather="trending-down" class="avatar-icon font-medium-3 NIFTY-IPriceChangeicon"></i>
         </div>
       </div>
       <div class="user-nav d-sm-flex d-none">
         <div class="my-auto">
-            <h5 class="fw-bolder mb-0 NFONIFTY-IBuyPrice">00,000.00</h5>
+            <h5 class="fw-bolder mb-0 NIFTY-IBuyPrice">00,000.00</h5>
             <p class="card-text font-small-3 mb-0">NIFTY</p>
         </div>
       </div>

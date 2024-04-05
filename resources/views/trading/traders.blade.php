@@ -1,75 +1,154 @@
+@php($ajaxformsubmit = true)
 @extends('layouts/contentLayoutMaster')
 
 @section('title', $title)
 
 @section('content')
-<section id="basic-vertical-layouts">
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-body">
-          <?= createFormHtmlContent($tradersFormData)?>
-          <div class="row mb-2 mt-2">
-            <div class="col-12">
-              <div class="row justify-content-between mb-2">
-                <div class="col-2">
-                    <div class="form-group">
-                        <?= limitDropDownData(5)?>
+
+    <section id="basic-vertical-layouts">
+        <div class="modal animated fade show" id="ajaxModel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-transparent">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="modelHeading"></h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="sliderForm" method="POST" name="sliderForm" action="{{ route('save.trade') }}"
+                            class="needs-validation" enctype="multipart/form-data">
+                            @csrf
+                            <input type="hidden" name="id" id="id">
+
+
+                            <div class="">
+                                <label class="form-label col-2" for="basic-addon-name">Name :</label>
+                                <input type="text" id="user_name_code" style="display: inline-block;width:fit-content;"
+                                    name="user_name_code" class="form-control border-0 col-10" readonly placeholder="Name"
+                                    aria-label="Name" aria-describedby="basic-addon-name" />
+                            </div>
+
+                            <div class="mb-1">
+                                <label class="form-label col-2" for="basic-addon-name">Script :</label>
+                                <input type="text" style="display: inline-block;width:fit-content;"
+                                    id="script_trading_symbol" name="trading_symbol" class="form-control border-0 col-10"
+                                    readonly placeholder="Name" aria-label="Name" aria-describedby="basic-addon-name" />
+                                <small class="error trading_symbol-error "></small>
+                            </div>
+                            <div class="mb-1">
+                                <label class="form-label" for="basic-addon-name">Lot</label>
+                                <input type="text" id="trade_lot" name="lot" class="form-control" placeholder="Name"
+                                    aria-label="Name" aria-describedby="basic-addon-name" />
+                                <small class="error lot-error "></small>
+                            </div>
+                            <div class="mb-1">
+                                <label class="form-label" for="basic-addon-name">Quantity</label>
+                                <input type="text" id="trade_quantity" name="quantity" class="form-control"
+                                    placeholder="Quantity" aria-label="Name" aria-describedby="basic-addon-name" />
+                                <small class="error quantity-error "></small>
+                            </div>
+                            <div class="mb-1">
+                                <label class="form-label" for="basic-addon-name">Price</label>
+                                <input type="text" id="trade_price" name="price" class="form-control"
+                                    placeholder="Quantity" aria-label="Name" aria-describedby="basic-addon-name" />
+                                <small class="error price-error "></small>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary" id="saveBtn">Save changes</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-                <div class="col-2">
-                    <div class="form-group">
-                        <input type="text" class="form-control" placeholder="search" />
-                    </div>
-                </div>
-              </div>
             </div>
-            <div class="col-md-12">
-              <div class="card-datatable table-responsive">
-                <table class="dt-responsive table">
-                  <thead>
-                    <tr>
-                      <th>D</th>
-                      <th>TIME</th>
-                      <th>CLIENT</th>
-                      <th>MARKET</th>
-                      <th>SCRIPT</th>
-                      <th>B/S</th>
-                      <th>ORDER TYPE</th>
-                      <th>LOT</th>
-                      <th>QTY</th>
-                      <th>ORDER PRICE</th>
-                      <th>STATUS</th>
-                      <th>USER IP</th>
-                      <th>USER IP</th>
-                      <th>O.TIME</th>
-                      <th>MODIFY</th>
-                      <th>CANCEL</th>
-                      <th>EXECUTE</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>                    
-                      <td colspan="16" align="center">No data available in table</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
+
+        <div class="card">
+            <?= createDatatableFormFilter($tradersFormData) ?>
+        </div>
+
+
+    </section>
 @endsection
 
 
 @section('vendor-script')
-{{-- vendor files --}}
-  <script src="{{ asset(mix('vendors/js/tables/datatable/jquery.dataTables.min.js')) }}"></script>
-  <script src="{{ asset(mix('vendors/js/tables/datatable/dataTables.bootstrap5.min.js')) }}"></script>
-  <script src="{{ asset(mix('vendors/js/tables/datatable/dataTables.responsive.min.js')) }}"></script>
-  <script src="{{ asset(mix('vendors/js/tables/datatable/responsive.bootstrap5.js')) }}"></script>
-  <script src="{{ asset(mix('vendors/js/pickers/flatpickr/flatpickr.min.js')) }}"></script>
+    {{-- vendor files --}}
+    <script src="{{ asset(mix('vendors/js/tables/datatable/jquery.dataTables.min.js')) }}"></script>
+    <script src="{{ asset(mix('vendors/js/tables/datatable/dataTables.bootstrap5.min.js')) }}"></script>
+    <script src="{{ asset(mix('vendors/js/tables/datatable/dataTables.responsive.min.js')) }}"></script>
+    <script src="{{ asset(mix('vendors/js/tables/datatable/responsive.bootstrap5.js')) }}"></script>
+    <script src="{{ asset(mix('vendors/js/pickers/flatpickr/flatpickr.min.js')) }}"></script>
+@endsection
+
+@section('page-script')
+    <script>
+        $(".select2-ajax-user_dropdown").select2({
+            ajax: {
+                url: "{{ route('getRoleWiseUserlist') }}",
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        q: params.term, // search term
+                        user_position: $(this).attr("data-type"), // search term
+                        page: params.page || 1
+                    };
+                },
+                processResults: function(data, params) {
+                    // parse the results into the format expected by Select2
+                    // since we are using custom formatting functions we do not need to
+                    // alter the remote JSON data, except to indicate that infinite
+                    // scrolling can be useda
+                    params.page = params.page || 1;
+
+                    return {
+                        results: data.data,
+                        pagination: {
+                            more: (params.page * 5) < data.total
+                        }
+                    };
+                },
+                cache: true
+            },
+            placeholder: 'Search Your Terms',
+            allowClear: true,
+            minimumInputLength: 1,
+            templateResult: RepoSelection,
+            templateSelection: RepoSelection,
+            escapeMarkup: function(es) {
+                return es;
+            }
+        });
+
+        function RepoSelection(option) {
+            if (!option.id) {
+                return option.text;
+            }
+            var $person =
+                `<div class="d-flex align-items-center p-0"><div class="avatar me-1 avatar-sm"><span class="avatar-content bg-${getRandomColorState()}">${getInitials(option.name)}</span></div><p class="mb-0">` +
+                option.name + `</p></div>`;
+            return $person;
+        }
+
+        function getRandomColorState() {
+            const color_states = ['success', 'danger', 'warning', 'info', 'dark', 'primary', 'secondary'];
+            return color_states[Math.floor(Math.random() * color_states.length)];
+        }
+
+        function getInitials(fullName) {
+            if (fullName.split(' ').length === 1) {
+                return fullName.substring(0, 2).toUpperCase();
+            } else {
+                return fullName
+                    .split(' ')
+                    .slice(0, 2)
+                    .map(word => word[0].toUpperCase())
+                    .join('')
+                    .substring(0, 2);
+            }
+        }
+    </script>
+
 @endsection

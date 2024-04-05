@@ -28,7 +28,7 @@ use App\Http\Controllers\settings\LiveTvController;
 use App\Http\Controllers\settings\MaxQuantityController as SettingsMaxQuantityController;
 use App\Http\Controllers\settings\ScriptController as SettingsScriptController;
 use App\Http\Controllers\settings\TimeSettingController;
-
+use App\Http\Controllers\WalletController;
 
 /*
 |--------------------------------------------------------------------------
@@ -69,8 +69,11 @@ Route::middleware(['auth:admin','role:admin|master|user'])->group(function () {
             Route::post('getwatchlist-filter-values', [TradingController::class, 'getWatchlistFilterValues'])->name('get.WatchlistFilterValues');
         });
 
-        Route::get('traders', [TradingController::class, 'traders'])->name('traders');
+        Route::get('trades', [TradingController::class, 'traders'])->name('view.trades');
+        Route::get('tradespagination', [TradingController::class, 'trades_paginate_data'])->name('trades-paginate-data');
+        
         Route::get('portfolio', [TradingController::class, 'portfolio'])->name('portfolio');
+        Route::get('portfoliopagination', [TradingController::class, 'portfolio_paginate_data'])->name('portfolio-paginate-data');
         Route::get('blocked-script', [TradingController::class, 'blockedScript'])->name('blocked-script');
         Route::get('margin-management', [TradingController::class, 'marginManagement'])->name('margin-management');
         Route::get('manual-trade', [TradingController::class, 'manualTrade'])->name('manual-trade');
@@ -78,7 +81,21 @@ Route::middleware(['auth:admin','role:admin|master|user'])->group(function () {
         Route::get('self-profit-loss', [TradingController::class, 'selfProfitLoss'])->name('self-profit-loss');
         Route::get('brokerage-refresh', [TradingController::class, 'brokerageRefresh'])->name('brokerage-refresh');
         Route::post('watchlist-save', [TradingController::class, 'saveWatchList'])->name('save.watchlist');
-    });    
+        Route::delete('watchlist-remove/{id}', [TradingController::class, 'removewatchlist'])->name('remove.watchlist');
+        Route::post('get-watchlist-data', [TradingController::class, 'getwatchlistdata'])->name('get.watchlist.ajax');
+        Route::post('store-trade', [TradingController::class, 'store_trade'])->name('save.trade');   
+    });   
+
+    Route::post('helper/getRecord/getsingletrade/{id}', [TradingController::class, 'getSingleTrade'])->name('get.single.trade'); 
+
+    /* Route Trading */
+
+
+    /* Route Wallet */
+    Route::get('wallet', [WalletController::class, 'wallet'])->name('wallet.view');
+    Route::get('/walletpaginate', [WalletController::class, 'wallet_paginate_data'])->name('wallet_paginate_data');
+    Route::post('/walletstore', [WalletController::class, 'wallet_store'])->name('wallet.store');
+
     /* Route Trading */
 
      /* Profile Pages */
@@ -86,6 +103,14 @@ Route::middleware(['auth:admin','role:admin|master|user'])->group(function () {
         Route::get('', [SettingsController::class, 'profile'])->name('profile.edit');
         Route::post('', [SettingsController::class, 'profile_store'])->name('profile.store');
         Route::post('password-update', [SettingsController::class, 'security_setting_store'])->name('password.update');
+    });
+
+     /* Helper for all */
+    Route::controller(HelperController::class)->group(function () {
+        Route::group(['prefix' => 'helper'], function () {        
+            Route::post('/getmarket-to-scripts', 'getMarketToScripts')->name('helper.getMarkrtToScripts');  
+            Route::post('/delete-record/{table_name}/{id}', 'deleteRecord')->name('helper.deleteRecord');            
+        });
     });
 
 });
@@ -195,10 +220,9 @@ Route::middleware(['auth:admin','role:admin|master'])->group(function () {
     Route::controller(HelperController::class)->group(function () {
         Route::group(['prefix' => 'helper'], function () {
             Route::post('/change-stautus/{table_name}/{id}/{status_column_name?}', 'changeStatus')->name('helper.changeStatus');
-            Route::post('/delete-record/{table_name}/{id}', 'deleteRecord')->name('helper.deleteRecord');                        
+            // Route::post('/delete-record/{table_name}/{id}', 'deleteRecord')->name('helper.deleteRecord');                        
             Route::post('/getRecord/{table_name}/{id}', 'getRecord')->name('helper.getRecord');            
-            Route::post('/getmarket-to-scripts', 'getMarketToScripts')->name('helper.getMarkrtToScripts');            
-                       
+            // Route::post('/getmarket-to-scripts', 'getMarketToScripts')->name('helper.getMarkrtToScripts');              
         });
     });
 

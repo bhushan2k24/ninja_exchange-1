@@ -1,117 +1,100 @@
 <?php
+
+use App\Models\Administrator;
 use Illuminate\Support\Facades\DB;
 use App\Models\Nex_Setting;
 use App\Models\Nex_Level;
 use App\Models\Nex_Market;
+use App\Models\Nex_master_market_detail;
+use App\Models\Nex_script;
+use App\Models\Nex_user_market_detail;
+use Illuminate\Support\Facades\Auth;
 
 #function for get form element data ---------------
 function getFormContentData($form_name = 'login-form')
 {
     return DB::table('nex_user')->select('*')->get();
 }
-#---------------
+#-------------------------------------------------
 
+#function for get allowed market ids ---------------
+function AllowedMarketIds($user_id=0,$parentMarket=0)
+{
+    $user_id = $user_id!=0?$user_id:Auth::id();
+    $userData = Administrator::find($user_id);    
+    
+    $userData = $parentMarket!=0 && !$userData->hasRole('admin') ? $userData->user_parent : $userData;
+    $getMasketIds = Nex_Market::select('id as market_id')->where('market_status','active');
+
+    if($userData->hasRole('master'))
+    {
+        $getMasketIds = Nex_master_market_detail::select('market_id')->where('user_id',$userData->id)->groupBy('market_id');
+        if($userData->is_last_master)
+            $getMasketIds->whereIn('market_id',AllowedMarketIds($userData->parent_id));
+    }
+    elseif($userData->hasRole('user'))
+    {
+        $getMasketIds = Nex_user_market_detail::select('market_id')->where('user_id',$userData->id)->groupBy('market_id');
+        $getMasketIds->whereIn('market_id',AllowedMarketIds($userData->parent_id));
+    }
+    // join
+    return  $getMasketIds->get()->pluck('market_id')->toArray();
+}
+#--------------------------------------------
 #function for get market data ---------------
-function marketData($id=0,$with_non_trading_market=0,$only_stock_trading=0)
+// function marketData($id=0,$with_non_trading_market=0,$only_stock_trading=0,$market_name='')
+function marketData($FilterMarket = [])
 {
 
-    $get_market = Nex_Market::select('*')->addSelect('market_name as label', 'id as value')->where('market_status','active');
+    $FilterMarket = ['id'=>$FilterMarket['id']??0,
+                    'with_non_trading_market'=>$FilterMarket['with_non_trading_market']??0,
+                    'only_stock_trading'=>$FilterMarket['only_stock_trading']??0,
+                    'market_name'=>$FilterMarket['market_name']??'',
+                    'user_id'=>$FilterMarket['user_id']??Auth::id(),
+                    'need_user_parent_market'=>$FilterMarket['need_user_parent_market']??0,
+                ];        
+                
+    extract($FilterMarket);
+
+    $get_market = Nex_Market::select('*')->addSelect('market_name as label', 'id as value')->where('market_status','active')->whereIn('id',AllowedMarketIds($user_id,$need_user_parent_market));
     if($id>0)
-        return $get_market->where('id',$id)->first();
-   
+    {
+        $result = $get_market->where('id', $id)->first();       
+        return $result ? $result->toArray() : [];
+    }        
+    if($market_name!='')
+    {
+        $result = $get_market->where('market_name',$market_name)->first();
+        return $result ? $result->toArray() : [];
+    }   
     if($only_stock_trading>0)
         return $get_market->where('market_type','stock_trading')->get()->toArray();
     elseif($with_non_trading_market>0)
         return $get_market->get()->toArray();
     else
         return $get_market->whereNot('market_type','non_trading')->get()->toArray();
- 
-    // if($other_markets == 1)
-    // {
-    //     $market = array_merge($market, [
-    //         // [
-    //         //     'label'=>'NSEOPT',
-    //         //     'value'=>3,
-    //         //     'form_field'=>['lot_wise_brokerage','intraday_multiplication','delivery_multiplication']
-    //         // ],
-    //         // [
-    //         //     'label'=>'NSEFUT',
-    //         //     'value'=>1,
-    //         //     'form_field'=>['amount_wise_brokerage']
-    //         // ],
-    //         // [
-    //         //     'label'=>'NSEEQT',
-    //         //     'value'=>6,
-    //         //     'form_field'=>['amount_wise_brokerage']
-    //         // ],
-    //         // [
-    //         //     'label'=>'NSECDS',
-    //         //     'value'=>7,
-    //         //     'form_field'=>['lot_wise_brokerage']
-    //         // ],
-    //         // [
-    //         //     'label'=>'MCXFUT',
-    //         //     'value'=>2,
-    //         //     'form_field'=>['lot_wise_brokerage','amount_wise_brokerage']
-    //         // ],
-    //         // [
-    //         //     'label'=>'GLOBAL STOCKS',
-    //         //     'value'=>5,
-    //         //     'form_field'=>['amount_wise_brokerage']
-    //         // ],        
-    //         // [
-    //         //     'label'=>'GLOBAL FUTURES',
-    //         //     'value'=>4,
-    //         //     'form_field'=>['amount_wise_brokerage']
-    //         // ],        
-    //         // [
-    //         //     'label'=>'FOREX',
-    //         //     'value'=>4,
-    //         //     'form_field'=>['lot_wise_brokerage']
-    //         // ],        
-    //         // [
-    //         //     'label'=>'CRYPTO',
-    //         //     'value'=>4,
-    //         //     'form_field'=>['lot_wise_brokerage','intraday_multiplication','delivery_multiplication']
-    //         // ],        
-    //         // [
-    //         //     'label'=>'COMEX',
-    //         //     'value'=>4,
-    //         //     'form_field'=>['lot_wise_brokerage']
-    //         // ],
-    //         [
-    //             'market_name'=>'CRICKET',
-    //             'id'=>'CRICKET',
-    //             'market_user_required_fields'=>'[]'
-    //         ],
-    //         [
-    //             'market_name'=>'CASINO',
-    //             'id'=>'CASINO',
-    //             'market_user_required_fields'=>'[]'
-    //         ]
-    //     ]);
-    // }
-
-    // return  $market;
-    // 'lot_wise_brokerage','amount_wise_brokerage','intraday_multiplication','delivery_multiplication'
 }
-#---------------
+#----------------------------------------------------------------
 
-#function for get script by market id data ---------------
-function scriptData($market_id = 0)
+#----------------------------------------------------------------
+#function for get script by market id or all  
+function scriptData($market_id = 0,$market_name='')
 {
-	$data = [];
-	if ($market_id > 0)
-	{
-		$scriptData = ["NIFTY", "BANKNIFTY", "AARTIIND", "ABB", "ABBOTINDIA", "ABCAPITAL", "ABFRL", "ACC", "ADANIENT", "ADANIPORTS", "ALKEM", "AMARAJABAT", "AMBUJACEM", "PLLTD", "APOLLOHOSP", "APOLLOTYRE", "ASHOKLEY", "ASIANPAINT", "ASTRAL", "AUBANK", "AUROPHARMA", "AXISBANK", "BAJAJ-AUTO", "BAJAJFINSV", "BAJFINANCE", "ALKRISIND", "BALRAMCHIN", "BANDHANBNK", "BANKBARODA", "BATAINDIA", "BEL", "BERGEPAINT", "BHARATFORG", "BHARTIARTL", "BHEL", "BIOCON", "BOSCHLTD", "PCL", "BRITANNIA", "BSOFT", "CADILAHC", "CANBK", "CANFINHOME", "CHOLAFIN", "CIPLA", "COALINDIA", "COFORGE", "COLPAL", "CONCOR", "COROMANDEL", "ROMPTON", "CUB", "CUMMINSIND", "DABUR", "DALBHARAT", "DEEPAKNTR", "DELTACORP", "DIVISLAB", "DIXON", "DLF", "DRREDDY", "EICHERMOT", "ESCORTS", "XIDEIND", "FEDERALBNK", "GAIL", "GLENMARK", "GMRINFRA", "GNFC", "GODREJCP", "GODREJPROP", "GRANULES", "GRASIM", "GUJGASLTD", "HAL", "HANAUT", "HAVELLS", "CLTECH", "HDFC", "HDFCAMC", "HDFCBANK", "HDFCLIFE", "HEROMOTOCO", "HINDALCO", "HINDCOPPER", "HINDPETRO", "HINDUNILVR", "IBULHSGFIN", "ICICIBANK", "CICIGI", "ICICIPRULI", "IDEA", "IDFCFIRSTB", "IEX", "IGL", "INDHOTEL", "INDIACEM", "INDIAMART", "INDIGO", "INDUSINDBK", "INDUSTOWER", "INFY", "NTELLECT", "IOC", "IPCALAB", "IRCTC", "ITC", "JINDALSTEL", "JKCEMENT", "JSWSTEEL", "JUBLFOOD", "KOTAKBANK", "L&amp;'TFH", "LALPATHLAB", "LAURUSLABS", "ICHSGFIN", "LT", "LTIM", "LTTS", "LUPIN", "M&amp;'M", "M&amp;'MFIN", "MANAPPURAM", "MARICO", "MARUTI", "MCDOWELL-N", "MCX", "METROPOLIS", "MFSL", "MGL", "INDTREE", "MOTHERSON", "MPHASIS", "MRF", "MUTHOOTFIN", "NAM-INDIA", "NATIONALUM", "NAUKRI", "NAVINFLUOR", "NBCC", "NESTLEIND", "NMDC", "NTPC", "BEROIRLTY", "OFSS", "ONGC", "PAGEIND", "PEL", "PERSISTENT", "PETRONET", "PFC", "PFIZER", "PIDILITIND", "PIIND", "PNB", "POLYCAB", "POWERGRID", "VRINOX", "RAIN", "RAMCOCEM", "RBLBANK", "RECLTD", "RELIANCE", "SAIL", "SBILIFE", "SBIN", "SHREECEM", "SHRIRAMFIN", "SIEMENS", "SRF", "STAR", "UNPHARMA", "SUNTV", "SYNGENE", "TATACHEM", "TATACOMM", "TATACONSUM", "TATAMOTORS", "TATAPOWER", "TATASTEEL", "TCS", "TECHM", "TITAN", "TORNTPHARM", "ORNTPOWER", "TRENT", "TVSMOTOR", "UBL", "ULTRACEMCO", "UPL", "VEDL", "VOLTAS", "WHIRLPOOL", "WIPRO", "ZEEL"];
+	$get_scripts = [];
 
-		foreach($scriptData as $key => $val)
-		{
-			$data[] = ['label'=>$val, 'value'=>$key + 1];
-		}
-	}
-	
-	return $data;
+    $get_scripts = Nex_script::select('*')->addSelect('script_name as label', 'nex_scripts.id as value')->where('script_status','active');
+
+    if($market_id <= 0 && $market_name == '')
+        return $get_scripts->get()->toArray();
+
+    if($market_id > 0)
+        return $get_scripts->where('market_id',$market_id)->get()->toArray();
+
+    if($market_name != '')
+        return $get_scripts->join('nex_markets','nex_markets.id','=','nex_scripts.market_id')->where('nex_markets.market_name',$market_name)->get()->toArray();
+
+
+	return $get_scripts;
 }
 #---------------
 

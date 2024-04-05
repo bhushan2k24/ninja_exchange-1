@@ -57,7 +57,7 @@ var userWatchList = [];
 externalSocket.on('marketWatch', (Marketdata) => {     
     // Broadcast the data to all connected clients
     io.emit('updateData', Marketdata);
-    console.log('Received data from external server:', Marketdata);
+    // console.log('Received data from external server:', Marketdata);
 });
 
 // Socket.IO for laravel
@@ -82,7 +82,7 @@ io.on('connection', (socket) => {
     });
 
     userWatchList[socket.id].on('marketWatch', (Marketdata) => {     
-        console.log(socket.id+' Market Watch', Marketdata);
+        // console.log(socket.id+' Market Watch', Marketdata);
         // Broadcast the data to all connected clients
         io.to(socketId).emit('updateData', Marketdata);
         // console.log('Received data from external server:'+socket.id, Marketdata);

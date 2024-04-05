@@ -29,17 +29,25 @@ $sidebarData = sideContentData();
   <div class="shadow-bottom"></div>
   <div class="main-menu-content">
     <ul class="navigation navigation-main text-capitalize" id="main-menu-navigation" data-menu="menu-navigation">
-
     <?php
     if (!empty($sidebarData))
     {
       foreach($sidebarData as $value)
       {
+
+        if(empty($value))
+          continue;
+
+        if(isset($value['roles']) && !Auth::user()->hasRole($value['roles']))
+          continue;
+        
         $is_open = '';
+        if (!empty($value['childData'])){
         array_map(function ($childValue) use (&$is_open) {
             $link_attribute = $childValue['link_attribute'] ?? [];
             $is_open = (url()->current() === route($childValue['link'], $link_attribute)) ? "open" : $is_open;
         }, $value['childData']);
+        }
         $link_attribute = isset($value['link_attribute'])?$value['link_attribute']:[] ;
         echo
         '<li class="nav-item '.(!empty($value['childData']) ? 'has-sub' : '').' '.(!empty($value['open']) ? 'opens' : '').' '.$is_open.' '.( Route::has($value['link']) && url()->current() === Route($value['link'],$link_attribute) ? "active" :  "" ).'">
@@ -49,12 +57,14 @@ $sidebarData = sideContentData();
                   <!-- <span class="badge badge-light-warning rounded-pill ms-auto me-1">2</span> -->
               </a>';
             if (!empty($value['childData']))
-            {
-              
+            {              
               echo
               '<ul class="menu-content">';
               foreach($value['childData'] as $childValue)
               {
+                if(isset($childValue['roles']) && !Auth::user()->hasRole($childValue['roles']))
+                  continue;
+
                 $link_attribute = isset($childValue['link_attribute'])?$childValue['link_attribute']:[] ; 
                 echo
                 '<li class="'.( url()->current() === Route($childValue['link'],$link_attribute) ? "active" :  "" ).'">

@@ -4,7 +4,7 @@
             <thead class="table-light">
                 <tr>
                     @foreach ($thead as $thead_th_value)
-                        <th>{{ $thead_th_value }}</th>
+                        <th class="text-nowrap">{{ $thead_th_value }}</th>
                     @endforeach
                 </tr>
             </thead>
@@ -13,7 +13,7 @@
                     @foreach ($tbody as $tbody_value)
                         <tr>
                             @foreach ($tbody_value as $tbody_tr_value)
-                                <td>{!! $tbody_tr_value !!}</td>
+                                <td class="text-nowrap">{!! $tbody_tr_value !!}</td>
                             @endforeach
                         </tr>
                     @endforeach
@@ -29,4 +29,6 @@
     <div class="justify-content-end mt-1 mx-2">
         {{ $tbody->links() }}
     </div>
+    {!! (isset($MyWatchScript)?'<script>getLPrice('.json_encode($MyWatchScript, 15, 512).')</script>':'') !!}
+    
 </div>

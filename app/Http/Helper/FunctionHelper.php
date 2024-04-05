@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Auth;
 use PhpParser\Node\Expr\FuncCall;
 
 function demoTest($name = 'user')
@@ -75,15 +76,15 @@ function createFormHtmlContent($formArray = [])
             if ($value['tag'] == 'button')
             {
                 $html .='
-                <div class="col col-md-'.(!empty($value['grid']) ? $value['grid'] : '12').' mt-2   '.(!empty($value['outer_div_classes']) ? $value['outer_div_classes'] : '').' ">
+                <div class="col-12 col-md-'.(!empty($value['grid']) ? $value['grid'] : '12').' mt-2   '.(!empty($value['outer_div_classes']) ? $value['outer_div_classes'] : '').' ">
                 <a href="javascript:void(0);" id="'.$value['name'].'" class="btn btn-outline-primary  w-100 waves-effect waves-float waves-light '.(!empty($value['extra-class']) ? $value['extra-class'] : '').' '.$element_extra_classes.'" name="'.$value['name'].'" >'.$value['label'].'</a>
                 </div>
                 ';
                 continue;
             }
             $html .=
-            '<div class="col col-md-'.(!empty($value['grid']) ? $value['grid'] : '12').' '.(!empty($value['outer_div_classes']) ? $value['outer_div_classes'] : '').'" style="margin-bottom: 1rem">
-                <label class="form-label" for="login-email">'.$value['label'].'</label>';
+            '<div class="col-12 col-md-'.(!empty($value['grid']) ? $value['grid'] : '12').' '.(!empty($value['outer_div_classes']) ? $value['outer_div_classes'] : '').'" style="margin-bottom: 1rem">
+                <label class="form-label" for="login-email">'.ucwords($value['label']).'</label>';
 
                 $value['placeholder'] = ucwords(!empty($value['placeholder'])?$value['placeholder']:$value['label']);
 
@@ -115,10 +116,12 @@ function createFormHtmlContent($formArray = [])
                         {
                             foreach($value['data'] as $childKey => $childValue)
                             {
+                                
+                                $checked = (!empty($value['value']) && $value['value'] == $childValue['value'] ? 'checked' : '');
                                 $html .=
                                 '<div class="text-capitalize form-check form-check-primary mt-'.($childKey > 0 ? '1' : '0').'">
-                                    <input type="'.$value['type'].'"  placeholder="'.$value['placeholder'].'"  name="'.$value['name'].'" value="'.$childValue['value'].'" class="form-check-input  '.$element_extra_classes.'" id="'.$value['name'].$childKey.'" />
-                                    <label class="form-check-label" for="'.$value['name'].$childKey.'">'.$childValue['label'].'</label>
+                                    <input type="'.$value['type'].'"  placeholder="'.$value['placeholder'].'"  name="'.$value['name'].'" value="'.$childValue['value'].'" class="form-check-input  '.$element_extra_classes.'" id="'.$value['name'].$childKey.'" '.$checked.'/>
+                                    <label class="form-check-label fs-09rem" for="'.$value['name'].$childKey.'">'.$childValue['label'].'</label>
                                 </div>';
                             }
                         }
@@ -152,7 +155,7 @@ function createFormHtmlContent($formArray = [])
         if(empty($formArray['no_submit']))
         {
             $html .=
-                '<div class="col col-md-'.(!empty($formArray['btnGrid']) ? $formArray['btnGrid'] : '12').' mt-2">
+                '<div class="col-12 col-md-'.(!empty($formArray['btnGrid']) ? $formArray['btnGrid'] : '12').' mt-2">
                     <button type="submit" class="btn btn-primary w-100 text-capitalize" tabindex="4">'.(!empty($formArray['submit']) ? $formArray['submit'] : 'save').'</button>
                 </div>';
         }
@@ -182,7 +185,7 @@ function createDatatableFormFilter($formArray = [])
                 {
                     $html .='
                     <div class="col col-md-'.(!empty($value['grid']) ? $value['grid'] : '12').' mt-2   '.(!empty($value['outer_div_classes']) ? $value['outer_div_classes'] : '').' ">
-                    <a href="javascript:void(0);" id="'.$value['name'].'" class="btn btn-outline-primary  w-100 waves-effect waves-float waves-light '.(!empty($value['extra-class']) ? $value['extra-class'] : '').' '.$element_extra_classes.'" name="'.$value['name'].'" >'.$value['label'].'</a>
+                    <a href="javascript:void(0);"  id="'.$value['name'].'" class="btn btn-outline-primary waves-effect waves-float waves-light '.(!empty($value['extra-class']) ? $value['extra-class'] : '').' '.$element_extra_classes.'" name="'.$value['name'].'" >'.$value['label']. '</a>
                     </div>
                     ';
                     continue;
@@ -228,10 +231,12 @@ function createDatatableFormFilter($formArray = [])
                             {
                                 foreach($value['data'] as $childKey => $childValue)
                                 {
+                                    $checked = (!empty($value['value']) && $value['value'] == $childValue['value'] ? 'checked' : '');
+
                                     $html .=
-                                    '<div class="text-capitalize form-check form-check-primary mt-'.($childKey > 0 ? '1' : '0').'">
-                                        <input type="'.$value['type'].'"  placeholder="'.$value['placeholder'].'"  name="'.$value['name'].'" value="'.$childValue['value'].'" class="form-check-input  '.$element_extra_classes.'" id="'.$value['name'].$childKey.'" />
-                                        <label class="form-check-label" for="'.$value['name'].$childKey.'">'.$childValue['label'].'</label>
+                                    '<div class="text-capitalize form-check form-check-primary mt-'.($childKey > 0 ? '0' : '0').'">
+                                        <input type="'.$value['type'].'"  placeholder="'.$value['placeholder'].'"  name="'.$value['name'].'" value="'.$childValue['value'].'" class="form-check-input  '.$element_extra_classes.'" id="'.$value['name'].$childKey.'" '.$checked.' />
+                                        <label class="form-check-label fs-09rem"  for="'.$value['name'].$childKey.'">'.$childValue['label'].'</label>
                                     </div>';
                                 }
                             }
@@ -297,11 +302,20 @@ function createDatatableFormFilter($formArray = [])
 #function for pass sidebar array content ---------------
 function sideContentData($array = [])
 {
+
+    #lable shows menu name in sidebar (STRING)
+    #icon shows menu icon in sidebar (STRING)
+    #link redirection on click (STRING) 
+    #link_attribute is set attribute in link  (ARRAY) 
+    #roles is shows menu logged in user role wise (ARRAY) 
+    #childData user to create submenu (ARRAY) 
+
     $data = [
         [
-            'label'=>'dashboard',
+            'label'=> (Auth::user()->hasRole(['admin','master'])?'dashboard':'home'),
             'link'=>'admin.dashboard',
             'icon'=>'home',
+            'roles'=> ['admin','master'],
             'childData'=>[]
         ],
         [
@@ -309,6 +323,7 @@ function sideContentData($array = [])
             'link'=>'',
             'icon'=>'trending-up',
             'open'=>'open',
+            'roles'=> ['admin','master'],
             'childData'=>[
                 [
                     'label'=>'watchlist',
@@ -316,8 +331,8 @@ function sideContentData($array = [])
                     'icon'=>'circle',
                 ],
                 [
-                    'label'=>'traders',
-                    'link'=>'traders',
+                    'label'=>'trades',
+                    'link'=>'view.trades',
                     'icon'=>'circle',
                 ],
                 [
@@ -362,6 +377,7 @@ function sideContentData($array = [])
             'link'=>'',
             'icon'=>'user',
             'open'=>'open',
+            'roles'=> ['admin','master'],
             'childData'=>[
                 [
                     'label'=>'user listing',
@@ -385,6 +401,11 @@ function sideContentData($array = [])
                     'label'=>'add account',
                     'link'=>'create.user',
                     'icon'=>'user-plus',
+                ],
+                [
+                    'label'=>'wallet',
+                    'link'=>'wallet.view',
+                    'icon'=>'circle',
                 ]
             ]
         ],
@@ -393,6 +414,7 @@ function sideContentData($array = [])
             'link'=>'',
             'icon'=>'sliders',
             'open'=>'',
+            'roles'=> ['admin','master'],
             'childData'=>[                
                 [
                     'label'=>'script',
@@ -431,7 +453,20 @@ function sideContentData($array = [])
                     'icon'=>'clock',
                 ]               
             ]
-        ]
+        ],    
+        [
+            'label'=>'wallet',
+            'link'=>'wallet.view',
+            'icon'=>'pocket',
+            'roles'=> ['user'],
+            'childData'=>[]
+        ],        
+        [
+            'label'=>'Logout',
+            'link'=>'admin.logout',
+            'icon'=>'power',
+            'childData'=>[]
+        ],
     ];
 
     return $data;
@@ -502,7 +537,6 @@ function site_favicon_logo()
 } 
 
 function getInitials($full_name) {
-
     if(count(explode(' ', $full_name)) == 1)
         return strtoupper(substr($full_name,0,2));
     return substr(implode('', array_map(fn($word) => (strtoupper(substr($word, 0, 1)) ), explode(' ', $full_name,2))),0,2);
@@ -522,5 +556,37 @@ function url_file_exists($pathOrUrl)
         return file_exists(str_replace(URL,PATH,$pathOrUrl));    
     return false;  
 }
+
+ #----------------------------------------------------------------
+#Function to get User Avatar
+function getUserNameWithAvatar($name='',$image=NULL,$position=' ')
+{
+    if($name=='')
+        return $name;
+
+    $Initials = getInitials($name);
+    $randomState = getRandomColorState();
+    $user_parent_profile = '<span class="avatar-content">'.$Initials.'</span>';
+
+    $user_parent_profile = url_file_exists($image)?                
+    '<img src="'.$image.'" alt="'.$name.'" height="32" width="32">':$user_parent_profile;
+    
+    $user_parent_profile = 
+        '<div class="d-flex justify-content-left align-items-center">
+            <div class="avatar-wrapper">
+                <div class="avatar  bg-light-'.$randomState.'  me-1">
+                '.$user_parent_profile.'
+                </div>
+            </div>
+            <div class="d-flex flex-column">
+                <a href="javascript:void(0);" class="user_name text-truncate text-body">
+                <span class="fw-bolder">'.ucwords($name).'</span>
+                </a>
+                <small class="emp_post text-muted">'. $position.'</small>
+            </div>
+        </div>';
+    return $user_parent_profile;
+}
+#----------------------------------------------------------------
 
 ?>

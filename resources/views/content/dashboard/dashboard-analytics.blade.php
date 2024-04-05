@@ -467,12 +467,42 @@
     <!--/ App Design Card -->
   </div>
 
+  @php($TradesData = ['pending'=>'','executed'=>''])
+  @if(!empty($TradeData))
+      @foreach($TradeData as $data)
+      <?php $profile = getUserNameWithAvatar($data->name.($data->parent_name?' ('.$data->parent_name.')':''),URL.USER.$data->profile_picture,$data->usercode); 
+      ?>
+      <?php 
+      $TradesData[$data->trade_status] .= 
+      '<tr>
+          <td><i data-feather="smartphone"></i></td>
+          <td>'.date('H:i:s',strtotime($data->date)) .'</td>
+          <td>'. $profile .'</td>
+          <td>'.$data->script_trading_symbol .'</td>
+          <td>'.ucwords($data->trade_type) .'</td>
+          <td>'.$data->trade_lot .'</td>
+          <td>'.$data->trade_quantity .'</td>
+          <td>'. $data->trade_price .'</td>
+        </tr>';
+      ?>
+      @endforeach
+  @endif
   <!-- List DataTable -->
   <div class="row">
     <div class="col-6">
+      <div class="row">
+        <div class="col-6 fw-bolder">
+          Executed Order
+        </div>
+        <div class="col-6 text-end">
+          <a href="{{ route('view.trades') }}?tradetype=executed">
+            View More <i data-feather='arrow-right-circle'></i>
+          </a>  
+        </div>
+      </div>
       <div class="card invoice-list-wrapper">
         <div class="card-datatable table-responsive">
-          <table class="invoice-list-table table">
+          <table class="invoice-list-table table table-sm">
             <thead>
               <tr>
                 <th>D</th>
@@ -486,18 +516,35 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td colspan="8" align="center">no data available..</td>
-              </tr>
+            @if($TradesData['executed'])
+            {!! $TradesData['executed'] !!}
+            @else
+            <tr>
+              <td colspan="8" align="center">no data available..</td>
+            </tr>
+            @endif
+
             </tbody>
           </table>
         </div>
       </div>
     </div>
+
+
     <div class="col-6">
+      <div class="row">
+        <div class="col-6 fw-bolder">
+          Pending Order
+        </div>
+        <div class="col-6 text-end">
+          <a href="{{ route('view.trades') }}?tradetype=pending">
+            View More <i data-feather='arrow-right-circle'></i>
+          </a> 
+        </div>
+      </div>
       <div class="card invoice-list-wrapper">
         <div class="card-datatable table-responsive">
-          <table class="invoice-list-table table">
+          <table class="invoice-list-table table table-sm table-hover">
             <thead>
               <tr>
                 <th>D</th>
@@ -511,9 +558,13 @@
               </tr>
             </thead>
             <tbody>
+              @if($TradesData['pending'])
+              {!! $TradesData['pending'] !!}
+              @else
               <tr>
                 <td colspan="8" align="center">no data available..</td>
               </tr>
+              @endif
             </tbody>
           </table>
         </div>

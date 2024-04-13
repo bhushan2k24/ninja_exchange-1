@@ -9,6 +9,7 @@ use App\Models\Nex_script_expire;
 use App\Models\Nex_trade;
 use App\Models\Nex_wallet;
 use App\Models\Nex_watchlist;
+use App\Models\Nex_user_market_detail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -53,7 +54,7 @@ class TradingController extends Controller
     public function saveWatchList(Request $request)
     {
 
-          $validated = Validator::make($request->all(), [
+        $validated = Validator::make($request->all(), [
             'watchlist_filter_market' => 'required',
             'watchlist_filter_script' => 'required',
             'watchlist_filter_expiry' => 'required',
@@ -168,6 +169,7 @@ class TradingController extends Controller
     #Trade Store
     public function store_trade(Request $request)
     {
+        // dd($request->all());
         $validated = Validator::make($request->all(), [
             'lot' => 'required',
             'quantity' => 'required',
@@ -176,6 +178,8 @@ class TradingController extends Controller
 
         $user_id = !Auth::user()->hasRole('user') ? $request->client : Auth::id();
         $userDetails = Administrator::find($user_id);
+
+
         $user_intraday_multi = $userDetails->user_intraday_multiplication;
         $user_delivery_multi = $userDetails->user_delivery_multiplication;
 
@@ -191,25 +195,44 @@ class TradingController extends Controller
         $TradeIntradayPrice = ($TradeLivePrice*$TradeQuantity)/$user_intraday_multi;
         $TradeDeliveryPrice = ($TradeLivePrice*$TradeQuantity)/$user_delivery_multi;
 
+
+
         if ($validated->fails()) 
-            return faildResponse(['Message' => 'Validation Warning', 'Data' => $validated->errors()->toArray()]);
-
-        if ($request->tradeBuySell === 'buy'){
-            $TotalWalletAmount = Nex_wallet::where('user_id', $user_id)->sum('wallet_amount');
-
-            if ($TradeIntradayPrice > $TotalWalletAmount) {
-                return faildResponse(['Data'=>['price'=>['Insufficient Balance To Trade']],'Message'=>'Insufficient Balance To Trade']);
-            }
-        }
+            return faildResponse(['Message' => 'Validation Warning', 'Data' => $validated->errors()->toArray()]); 
         
-        if ($request->tradeBuySell === 'sell'){
-            $User_Trade_Data = Nex_trade::where('user_id', $user_id)->where('trade_type','buy')->where('script_expires_id',$request->script_expires_id)->where('trade_quantity',$request->quantity)->where('trade_reference_id',0)->get();
-           if ($User_Trade_Data->isEmpty()){
-                return faildResponse(['Data'=>['sell'=>["You don't have script to sell or your sell quantity is not match with the quantity you bought"]],'Message'=>"You don't have script to sell or your sell quantity is not match with the quantity you bought"]);
+        $buySellcompareType=($request->tradeBuySell=='sell'?'buy':'sell');
+        $boughtSold=$request->tradeBuySell=='sell'?'bought':'sold';
+
+
+        $User_Trade_Data = Nex_trade::where('user_id', $user_id)
+        ->where('trade_type', $buySellcompareType)
+        ->where('script_expires_id', $request->script_expires_id)
+        ->where('trade_reference_id', 0)
+        ->orderBy('created_at', 'asc') 
+        ->get(); 
+
+        if ($User_Trade_Data->isNotEmpty()) { // Check if there are any matching records
+            $existingQuantities = $User_Trade_Data->pluck('trade_quantity')->toArray(); // Get all existing quantities
+
+            if (!in_array($request->quantity, $existingQuantities)) { // Check if requested quantity matches any existing quantity
+                return faildResponse([
+                    'Data' => [
+                        $request->tradeBuySell => [
+                            "You already have $buySellcompareType but the requested $request->tradeBuySell quantity does not match any existing quantity"
+                        ]
+                    ],
+                    'Message' => "You already have $buySellcompareType but the requested $request->tradeBuySell quantity does not match any existing quantity"
+                ]);
             }
         }
 
    
+            $TotalWalletAmount = Nex_wallet::where('user_id', $user_id)->sum('wallet_amount');
+            if ($TradeIntradayPrice > $TotalWalletAmount) {
+                return faildResponse(['Data'=>['price'=>['Insufficient Balance To Trade']],'Message'=>'Insufficient Balance To Trade']);
+            }
+    
+
         $updateFields = (!empty($request->id)&& $request->id>0) ? 
         [
             'trade_quantity' => $request->has('quantity') ? $request->quantity : 0,
@@ -240,23 +263,47 @@ class TradingController extends Controller
             'trade_multiplication_value' => $user_intraday_multi ? $user_intraday_multi :0,
         ];
  
-             $nex_trade = Nex_trade::updateOrCreate( 
+            $nex_trade = Nex_trade::updateOrCreate( 
             ['id' => $request->id],
             $updateFields);
 
-            $lastBuyTrade = Nex_trade::where('trade_type', 'buy')
-            ->where('user_id', $user_id)
-            ->where('script_expires_id', $request->script_expires_id)
-            ->where('trade_quantity',$request->quantity)
-            ->where('trade_reference_id','0')
-            ->orderBy('id', 'asc') 
-            ->first();
+            $lastTrade = $User_Trade_Data->where('trade_quantity', $request->quantity)->first();
 
-            if($lastBuyTrade && $request->has('tradeBuySell') && $request->tradeBuySell === 'sell') 
-                $lastBuyTrade->update(['trade_reference_id' => $nex_trade->id]);
 
-            $transactionType = ($request->tradeBuySell === 'buy') ? 'debit' : 'credit';
-            $walletAmount = ($request->tradeBuySell === 'buy') ? -abs($nex_trade['trade_order_price']) : abs($nex_trade['trade_order_price']);
+            if($lastTrade && $request->has('tradeBuySell') && $request->tradeBuySell === 'sell'){
+                $lastTrade->update(['trade_reference_id' => $nex_trade->id]);
+                $nex_trade->update(['trade_reference_id' => $lastTrade->id]);
+
+                $transactionType = 'credit';
+                $walletAmount = abs($nex_trade['trade_order_price']);
+            }elseif($request->tradeBuySell === 'sell'){
+                $transactionType = 'debit';
+                $walletAmount = -abs($nex_trade['trade_order_price']);
+            }
+               
+
+            if($lastTrade && $request->has('tradeBuySell') && $request->tradeBuySell === 'buy'){
+                $lastTrade->update(['trade_reference_id' => $nex_trade->id]); 
+                $nex_trade->update(['trade_reference_id' => $lastTrade->id]);
+                $transactionType = 'credit';
+                $walletAmount = abs($nex_trade['trade_order_price']);   
+            }elseif($request->tradeBuySell === 'buy'){
+                $transactionType = 'debit';
+                $walletAmount = -abs($nex_trade['trade_order_price']);
+            }
+
+            //Get Brokrage Added by rutik Start---
+            $scriptName = Nex_script_expire::select('market_name', 'script_id')->where('id', $request->script_expires_id)->first();
+            $brokrage = Nex_user_market_detail::where('user_id', $user_id)
+                                ->where('script_id', 0)
+                                ->whereIn('market_field', ['commission_type', 'brokerage_type', 'delivery_commission', 'intraday_commission'])
+                                ->pluck('market_field_amount', 'market_field');
+            dd($brokrage);
+
+
+
+            //Get Brokrage Added by rutik End---
+           
 
             $walletData = [
                 'user_id' =>  $user_id,
@@ -266,7 +313,7 @@ class TradingController extends Controller
             ];
             Nex_wallet::create($walletData); 
             
-            return successResponse(['Message' => 'Success!', 'Data' => [], 'Redirect' => route((!empty($request->id)&& $request->id>0)?'view.trades':'view.watchlist')]);
+            return successResponse(['Message' => 'Success!', 'Data' => [], 'Redirect' => route((!empty($request->id)&& $request->id>0)?'view.tradestrades':'view.watchlist')]);
     }
 
     #WatchList Modules Stop
@@ -411,7 +458,7 @@ class TradingController extends Controller
             $Data = DB::table('nex_trades')->join('administrators','administrators.id','nex_trades.user_id')->join('nex_script_expires','nex_script_expires.id','nex_trades.script_expires_id')->select('nex_trades.*','nex_trades.created_at as trade_created_at','nex_trades.id as trade_id','nex_trades.updated_at as date','administrators.*','nex_script_expires.market_name','nex_script_expires.market_id','nex_script_expires.script_id','nex_script_expires.script_name','nex_script_expires.script_trading_symbol',DB::raw('(SELECT  sub_admin.name parent_name FROM administrators sub_admin  WHERE id=administrators.parent_id) parent_name'));
             
                     
-            $thead = ['D','TIME','CLIENT','MARKET','SCRIPT',"B/S",'ORDER TYPE','LOT','QTY','ORDER PRICE','STATUS','USER IP','UPDATED AT','ACTION'];
+            $thead = ['D','TIME','CLIENT','MARKET','SCRIPT',"B/S",'ORDER TYPE','LOT','QTY','ORDER PRICE','STATUS','USER IP','CREATED AT','ACTION'];
 
             if(!empty($request->order_type))
                 $Data->where('trade_status','=',$request->input('order_type'));
@@ -452,12 +499,14 @@ class TradingController extends Controller
                 });
             }
             $limit = $request->limit ? $request->limit : 10;
-            $tbody = $Data->orderByDesc('nex_trades.updated_at')->paginate($limit);
+            $tbody = $Data->orderByDesc('nex_trades.created_at')->paginate($limit);
             $tbody_data = $tbody->items();
+           
             foreach ($tbody_data as $key => $data) {
 
                 $profile = getUserNameWithAvatar($data->name.($data->parent_name?' ('.$data->parent_name.')':''),URL.USER.$data->profile_picture,$data->usercode); 
-                
+
+              
                 $tbody_data[$key] = 
                 [
                     '<i data-feather="smartphone"></i>',
@@ -465,14 +514,14 @@ class TradingController extends Controller
                     $profile,
                     $data->market_name,
                     $data->script_trading_symbol,
-                    ucwords($data->trade_type),
+                    '<span class="' . ($data->trade_type == 'buy' ? 'text-success' : 'text-danger') . '">' . ucwords($data->trade_type) . '</span>',
                     ucwords($data->trade_order_type),
                     $data->trade_lot,
                     $data->trade_quantity,
                     $data->trade_price,
                     ucwords($data->trade_status),
                     $data->user_ip,
-                    $data->date,
+                    $data->trade_created_at,
                     '<a href="javascript:void(0);" class="avatar avatar-status bg-light-danger delete_record" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete" deleteto="'.encrypt_to('nex_trades').'/'.encrypt_to($data->trade_id).'">
                     <span class="avatar-content">
                         <i data-feather=\'trash-2\' class="avatar-icon"></i>

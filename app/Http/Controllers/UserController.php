@@ -33,6 +33,7 @@ class UserController extends Controller
             'fieldData'=>[
                 [
                     'tag'=>'select',
+                    'roles'=>$type == 'user' ? ['admin','master'] : ($type=='master' ? [''] : ($type=='broker' ? [''] : [''])),
                     'type'=>'',
                     'label'=>'Broker',
                     'name'=>'borker_id',
@@ -45,6 +46,7 @@ class UserController extends Controller
                 ],
                 [
                     'tag'=>'select',
+                    'roles'=>$type == 'user' ? ['admin','master'] : ($type=='master' ? ['admin'] : ($type=='broker' ? ['admin'] : [''])),
                     'type'=>'',
                     'label'=>'Master',
                     'name'=>'master_id',
@@ -57,6 +59,7 @@ class UserController extends Controller
                 ],
                 [
                     'tag'=>'select',
+                    'roles'=>$type == 'user' ? ['admin','master'] : ($type=='master' ? [''] : ($type=='broker' ? [''] : [''])),
                     'type'=>'',
                     'label'=>'Client',
                     'name'=>'client_id',
@@ -153,10 +156,10 @@ class UserController extends Controller
             ],
         ];
         
-        if ($type != 'user') {
-            unset($file['userListFormData']['fieldData'][0]);
-            unset($file['userListFormData']['fieldData'][1]);
-        }
+        // if ($type != 'user') {
+        //     unset($file['userListFormData']['fieldData'][0]);
+        //     unset($file['userListFormData']['fieldData'][1]);
+        // }
         return view('user.list', $file);
     }
     // ---------------

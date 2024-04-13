@@ -40,7 +40,7 @@ class ExpiryController extends Controller
         {
             
             $Data = DB::table('nex_script_expires');
-            $thead = ['MARKET NAME','SCRIPT NAME','TRADING SYMBOL','EXPIRY DATE','UPDATED AT','ACTION'];
+            $thead = ['MARKET NAME','SCRIPT NAME','TRADING SYMBOL', 'SCRIPT EXTENSION','EXPIRY DATE','UPDATED AT','ACTION'];
             if(!empty($request->market_name))
                 $Data->where('market_id','=',$request->input('market_name'));
             
@@ -58,10 +58,21 @@ class ExpiryController extends Controller
                         $data->market_name,
                         $data->script_name,
                         $data->script_trading_symbol,
+                        $data->script_extension,
                         $data->expiry_date,
                         $data->updated_at,
-                        '<button class="btn-success edit-button" data-id="' . $data->id . '"><i data-feather=\'edit\' class="align-baseline"></i></button>
-                        <button class="btn-danger delete-button" data-id="' . $data->id . '" onclick="confirmDelete(' . $data->id . ')"><i data-feather=\'trash-2\' class="align-baseline"></i></button>'
+                        '<a href="javascript:void(0);" class="avatar avatar-status bg-light-primary edit-button openmodal-ajaxModel" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit" data-id="' . $data->id . '">
+                            <span class="avatar-content">
+                                <i data-feather=\'edit\' class="avatar-icon"></i>
+                            </span>
+                        </a>
+                        <a href="javascript:void(0);" class="avatar avatar-status bg-light-danger delete-button" data-bs-toggle="tooltip" onclick="confirmDelete(' . $data->id . ')" data-bs-placement="bottom" title="Delete" data-id="' . $data->id . '">
+                            <span class="avatar-content">
+                                <i data-feather=\'trash-2\' class="avatar-icon"></i>
+                            </span>
+                        </a>'
+                        // '<button class="btn-success edit-button" data-id="' . $data->id . '"><i data-feather=\'edit\' class="align-baseline"></i></button>
+                        // <button class="btn-danger delete-button" data-id="' . $data->id . '" onclick="confirmDelete(' . $data->id . ')"><i data-feather=\'trash-2\' class="align-baseline"></i></button>'
                     ];
           }
 
@@ -78,6 +89,8 @@ class ExpiryController extends Controller
             'market_id' => 'required', // Make sure market_id is required
             'script_id' => 'required',
             'expiry_date' => 'required',
+            'script_trading_symbol' => 'required',
+            'script_extension' => 'required',
         ]);
     
         if ($validated->fails()) {
@@ -93,7 +106,10 @@ class ExpiryController extends Controller
             'market_name' => $market->market_name,
             'script_name' =>$script->script_name,
             'script_id' => $request->script_id,
-            'expiry_date' =>$request->expiry_date
+            'expiry_date' =>$request->expiry_date,
+            'script_trading_symbol' => $request->script_trading_symbol,
+            'script_extension' => $request->required,
+
         ];
     
         if ($dataToUpdate) {

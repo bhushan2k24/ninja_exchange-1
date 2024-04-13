@@ -8,7 +8,7 @@
                 <div class="card">
                     <div class="card-body">
                         <form class="row" id="watchlist-form"
-                            action="http://127.0.0.1/ninja_exchange/trading/watchlist-save" method="post">
+                            action="{{ route('save.watchlist') }}" method="post">  {{-- http://127.0.0.1/ninja_exchange/trading/watchlist-save --}}
                             <div class="col col-md-2 " style="margin-bottom: 1rem">
                                 <label class="form-label" for="watchlist_filter_market">SEGMENT</label><select
                                     class="select2 form-select marketToScripts" name="watchlist_filter_market">

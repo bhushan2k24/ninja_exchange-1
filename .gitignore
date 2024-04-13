@@ -9,7 +9,7 @@
 # /public/css-rtl
 # /public/vendors
 # /storage/*.key
-#/vendor
+/vendor
 # .env
 # .env.backup
 # .phpunit.result.cache

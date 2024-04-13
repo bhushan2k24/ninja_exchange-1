@@ -62,11 +62,9 @@
 
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <div class="modal-header bg-transparent">
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
                     <div class="modal-header">
                         <h4 class="modal-title" id="modelHeading"></h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
 
@@ -109,7 +107,16 @@
                                     placeholder="Quantity" aria-label="Name" aria-describedby="basic-addon-name" />
                                 <small class="error expiry_date-error "></small>
                             </div>
-
+                            <div class="mb-1">
+                                <label class="form-label" for="trading_symbol">Trading Symbol</label>
+                                <input type="text" class="form-control" id="script_trading_symbol" name="script_trading_symbol"  placeholder="Trading Symbol" />
+                                <small class="error script_trading_symbol-error "></small>
+                            </div>
+                            <div class="mb-1">
+                                <label class="form-label" for="trading_symbol">Script Extension</label>
+                                <input type="text" class="form-control" id="script_extension" name="script_extension"  placeholder="Script Extension" />
+                                <small class="error script_extension-error "></small>
+                            </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                 <button type="submit" class="btn btn-primary" id="saveBtn">Save changes</button>
@@ -187,6 +194,8 @@
 
                         // $('#script_name').val(dataToEdit.script_name);
                         $('#expiry_date').val(dataToEdit.expiry_date);
+                        $('#script_trading_symbol').val(dataToEdit.script_trading_symbol);
+                        $('#script_extension').val(dataToEdit.script_extension);
 
                         $('#ajaxModel').modal('show');
                     },

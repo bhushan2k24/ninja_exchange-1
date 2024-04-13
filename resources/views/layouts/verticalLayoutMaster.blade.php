@@ -10,7 +10,7 @@ data-asset-path="{{ asset('/')}}">
 
   <!-- BEGIN: Main Menu-->
   @if((isset($configData['showMenu']) && $configData['showMenu'] === true))
-  @include('panels.sidebar')
+  @include('panels.sidebar') 
   @endif
   <!-- END: Main Menu-->
 

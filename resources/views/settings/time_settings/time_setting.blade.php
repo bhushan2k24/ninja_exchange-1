@@ -48,25 +48,19 @@
 
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <div class="modal-header bg-transparent">
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
                     <div class="modal-header">
                         <h4 class="modal-title" id="modelHeading"></h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-
                         <form id="sliderForm" method="POST" name="sliderForm" action="{{ route('time_setting_store') }}"
                             class="needs-validation" enctype="multipart/form-data">
                             @csrf
-
-
-
                             <div class="mb-1">
                                 <input type="text" hidden name="id" id="scriptid">
                                 <label class="form-label" for="basic-addon-name">Market Name</label>
                                 <select name="market_id" id="market_name"
-                                    class="form-control form-select select2 markettoscript" script_to=".scriptofmarket">
+                                    class="form-control form-select select2 markettoscript" recordof="{{  }}" script_to=".scriptofmarket">
                                     <option value="" disabled selected>Select Market</option>
                                     <!-- Placeholder option -->
                                     @foreach ($marketdata as $market)
@@ -150,13 +144,10 @@
     var market_id = $(this).val();
     var market_name = $('option:selected',this).text().trim();
     var scriptofmarket = $(this).attr('script_to');
-    console.log(market_name);
-
-  
-
+    var url= $(this).attr('recordof');
     $.ajax({
         type: 'GET',
-        url: getscript_url,
+        url: Base_url+"helper/getRecord/" + url,
         data: { market_id: market_id },
         success: function (data) {
             console.log("AJAX Response Data:", data);

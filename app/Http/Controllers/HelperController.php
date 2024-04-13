@@ -112,6 +112,14 @@ class HelperController extends Controller
         return $TradingExtensions;
     }
 
+    #-------------------------------------------------------------------
+    #Function to get Market Script
+    public function getMarketScript(Request $request)
+    {
+        $script = Nex_script::where('market_id', $request->market_id)->get();
+        return response()->json($script);
+    }
+
    
 }
 

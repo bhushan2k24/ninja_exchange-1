@@ -6,10 +6,11 @@
 @php
 $configData = Helper::applClasses();
 @endphp
-
-<html class="loading {{ $configData['theme'] === 'light' ? '' : $configData['layoutTheme'] }}"
+{{-- {{ $configData['theme'] === 'light' ? '' : $configData['layoutTheme'] }} --}}
+{{-- @if ($configData['theme'] === 'dark') data-layout="dark-layout" @endif --}}
+<html class="loading"
   lang="@if (session()->has('locale')){{ session()->get('locale') }}@else{{ $configData['defaultLanguage'] }}@endif" data-textdirection="{{ env('MIX_CONTENT_DIRECTION') === 'rtl' ? 'rtl' : 'ltr' }}"
-  @if ($configData['theme'] === 'dark') data-layout="dark-layout" @endif>
+  >
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">

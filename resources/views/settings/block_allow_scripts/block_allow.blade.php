@@ -12,72 +12,53 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-
-
                         <div class="row ">
-
                             <div class="col-12">
-
                                 <form class="datatable_paginate row justify-content-between mb-2"
-                                    action="{{ route('block_master_script_paginate_data') }}" table="blockmasterscriptpaginationdata_paginate_data">
+                                    action="{{ route('block_master_script_paginate_data') }}"
+                                    table="blockmasterscriptpaginationdata_paginate_data">
                                     <div class="row">
-
                                         <input type="hidden" name="page" value="1">
-        
                                         <div class="col-3 ms-auto">
                                             <div class="form-group">
                                                 <input type="text" class="form-control" placeholder="search"
                                                     id="search" name="search" />
                                             </div>
                                         </div>
-
                                     </div>
                                 </form>
-
                             </div>
-
                         </div>
-
                     </div>
                 </div>
             </div>
         </div>
 
-
         <div class="modal animated show" id="ajaxModel" aria-hidden="true">
-
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <div class="modal-header bg-transparent">
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
                     <div class="modal-header">
                         <h4 class="modal-title" id="modelHeading"></h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-
-                        <form id="sliderForm" method="POST" name="sliderForm" action="{{ route('block_allow_script_store') }}"
-                            class="needs-validation" enctype="multipart/form-data">
+                        <form id="sliderForm" method="POST" name="sliderForm"
+                            action="{{ route('block_allow_script_store') }}" class="needs-validation"
+                            enctype="multipart/form-data">
                             @csrf
-
-
                             <div class="mb-1">
-                              
                                 <label class="form-label" for="basic-addon-name">Master Name</label>
-                                <select name="user_id" id="user_name"
-                                    class="form-control form-select select2 ">
+                                <select name="user_id" id="user_name" class="form-control form-select select2 ">
                                     <option value="" disabled selected>Select Master</option>
                                     <!-- Placeholder option -->
                                     @foreach ($userdata as $user)
-                                        <option value="{{ $user->id }}"
-                                            @if ($user->username == $user->username)  @endif>
+                                        <option value="{{ $user->id }}" @if ($user->username == $user->username)  @endif>
                                             {{ $user->username }}
                                         </option>
                                     @endforeach
                                 </select>
                                 <small class="error user_id-error "></small>
                             </div>
-
                             <div class="mb-1">
                                 <input type="text" hidden name="id" id="scriptid">
                                 <label class="form-label" for="basic-addon-name">Market Name</label>
@@ -94,12 +75,6 @@
                                 </select>
                                 <small class="error market_id-error "></small>
                             </div>
-
-
-                        
-
-
-
                             <div class="mb-1">
                                 <label class="form-label" for="basic-addon-name">Script Name</label>
                                 <select name="script_id" id="script_name"
@@ -109,17 +84,11 @@
                                 </select>
                                 <small class="error script_id-error "></small>
                             </div>
-
-                       
-
-                           
-
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                 <button type="submit" class="btn btn-primary" id="saveBtn">Block Script</button>
                             </div>
                         </form>
-
                     </div>
                 </div>
             </div>
@@ -148,14 +117,6 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="{{ asset('js/market/getscript.js') }}"></script>
     <script src="{{ asset('js/market/paginate.js') }}"></script>
-    
-
-
-
-
-   
-
-   
 
 
 
@@ -163,33 +124,39 @@
 
 
 
-<script>
-    function confirmDelete(id) {
-      
-        Swal.fire({
-            title: 'Are you sure?',
-            text: 'You want to unblock this record?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, unblock it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-               
-                axios.delete(`deleteallowscript/${id}`)
-                    .then(response => {
-                        if (response.data.Redirect) {
-                            window.location.href = response.data.Redirect;
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                    });
-            }
-        });
-    }
-</script>
+
+
+
+
+
+
+
+
+    <script>
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'You want to unblock this record?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, unblock it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    axios.delete(`deleteallowscript/${id}`)
+                        .then(response => {
+                            if (response.data.Redirect) {
+                                window.location.href = response.data.Redirect;
+                            }
+                        })
+                        .catch(error => {
+                            console.error(error);
+                        });
+                }
+            });
+        }
+    </script>
 
 
     <script>
@@ -198,7 +165,7 @@
             console.log(id);
             $("#addscript").click(function() {
                 $('#modelHeading').text('Ban Script');
-            
+
                 $('.error').html('');
 
                 // Reset the "Market Name" select field to the placeholder option
@@ -208,11 +175,41 @@
                 $("#ajaxModel").modal("show");
             });
         });
+        // $(document).on('change', '.markettoscript', function () {
+        //     var markettag = this;
+        //     var market_id = $(this).val();
+        //     var market_name = $('option:selected',this).text().trim();
+        //     var scriptofmarket = $(this).attr('script_to');
+        //     var url= $(this).attr('recordof');
+        //     $.ajax({
+        //         type: 'GET',
+        //         url: Base_url+"helper/get-market-to-script/",
+        //         data: { market_id: market_id },
+        //         success: function (data) {
+        //             console.log("AJAX Response Data:", data);
+
+        //             // Clear and populate the "Script" dropdown with fetched data
+        //             var scriptDropdown = scriptofmarket;
+        //             // $(scriptDropdown).remove(); // Clear the dropdown options
+
+        //             // if (market_name === 'GLOBAL FUTURES' || market_name === 'BINARY') {
+        //                 var html = '';
+        //                 $.each(data, function (key, value) {
+        //                     html += '<option value="' + value.id + '">' + value.script_name + '</option>';
+        //                 });
+        //                 $(scriptofmarket).append(html);
+        //         // }
+        //         },
+        //         error: function (xhr, status, error) {
+        //             console.error('Error:', error);
+        //         }
+        //     });
+        // });
     </script>
 
 
 
-    
+
 
 
 

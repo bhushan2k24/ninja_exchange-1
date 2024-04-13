@@ -47,8 +47,18 @@ class LiveTvController extends Controller
                         ucwords($data->language),
                         $data->video_link,
                         $data->updated_at,
-                        '<button class="btn-success edit-button" data-id="' . $data->id . '"><i data-feather=\'edit\' class="align-baseline"></i></button>
-                        <button class="btn-danger delete-button" data-id="' . $data->id . '" onclick="confirmDelete(' . $data->id . ')"><i data-feather=\'trash-2\' class="align-baseline"></i></button>'
+                        '<a href="javascript:void(0);" class="avatar avatar-status bg-light-primary edit-button openmodal-ajaxModel" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit" data-id="' . $data->id . '">
+                            <span class="avatar-content">
+                                <i data-feather=\'edit\' class="avatar-icon"></i>
+                            </span>
+                        </a>
+                        <a href="javascript:void(0);" class="avatar avatar-status bg-light-danger delete-button" data-bs-toggle="tooltip" onclick="confirmDelete(' . $data->id . ')" data-bs-placement="bottom" title="Delete" data-id="' . $data->id . '">
+                            <span class="avatar-content">
+                                <i data-feather=\'trash-2\' class="avatar-icon"></i>
+                            </span>
+                        </a>'
+                        // '<button class="btn-success edit-button" data-id="' . $data->id . '"><i data-feather=\'edit\' class="align-baseline"></i></button>
+                        // <button class="btn-danger delete-button" data-id="' . $data->id . '" onclick="confirmDelete(' . $data->id . ')"><i data-feather=\'trash-2\' class="align-baseline"></i></button>'
                     ];
           }
 

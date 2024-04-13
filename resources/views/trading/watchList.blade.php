@@ -278,25 +278,29 @@
                     <div class="col-6 col-md-2  mt-1">
                         {{-- <label class="form-label" for="login-email">QTY</label> --}}
                         <input class="form-control scriptLot" placeholder="Lot" value="" id="lot"
-                            type="number" name="lot" aria-describedby="lot" tabindex="1">
+                            type="number" name="lot" aria-describedby="lot" tabindex="1" step="any">
+
+                            <small class="error lot-error d-block"></small>
                             <label class="form-label text-center ms-5" for="lot">Lot</label>
-                        <small class="error lot-error"></small>
+                        
                     </div>
 
                     <div class="col-6 col-md-2  mt-1">
                         {{-- <label class="form-label" for="login-email">QTY</label> --}}
                         <input class="form-control scriptQuantityval" placeholder="Quantity" value=""
                             id="quantity" type="number" name="quantity" aria-describedby="quantity" tabindex="1">
+                            <small class="error quantity-error d-block"></small>
                             <label class="form-label text-center ms-5" for="quantity">Quantity</label>
-                        <small class="error quantity-error"></small>
+                       
                     </div>
 
                     <div class="col-6 col-md-2  mt-1">
                         {{-- <label class="form-label" for="login-email">QTY</label> --}}
                         <input class="form-control scriptPriceCalc" placeholder="Price" value="" id="price" type="text"
                             name="price" aria-describedby="price" readonly tabindex="3">
+                            <small class="error price-error d-block"></small>
                             <label class="form-label text-center ms-5" for="price">Price</label>
-                        <small class="error price-error"></small>
+                       
                     </div>
                     @if(Auth::user()->user_position!='user')
                     <div class="col-6 col-md-2  mt-1">           
@@ -305,13 +309,14 @@
                             <option value="{{ $user->id }}">{{ $user->name }}</option>
                             @endforeach
                         </select>
+                        <small class="error client-error d-block"></small>
                         <label class="form-label text-center ms-5" for="client">User</label>
-                        <small class="error client-error"></small>
+                       
                     </div>
                     @endif
                     <div class="col-12 col-md-2 d-flex align-items-start justify-content-end ps-0 mt-1">
                         <button type="submit"
-                            class="btn btn-primary me-1 waves-effect waves-float waves-light buy-sell-btn w-100">Continue</button>
+                            class="btn btn-primary waves-effect waves-float waves-light buy-sell-btn w-100">Continue</button>
                         
                     </div>
 
@@ -469,6 +474,8 @@
                             $('#script_expires_id').val(scriptExpireId);                            
                             $('.scriptSymbol').html(tradingSymbol);
                             $('.scriptLot').val(lot);
+
+                         
                           
                             var bidvalue = $($('[pl-BuyPrice]')[0]).text().replace(/,/g, '');
                             var askvalue = $($('[pl-SellPrice]')[0]).text().replace(/,/g, '');

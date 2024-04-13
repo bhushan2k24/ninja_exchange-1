@@ -178,6 +178,9 @@ function createDatatableFormFilter($formArray = [])
         if(!empty($formArray['fieldData'])){
             foreach($formArray['fieldData'] as $key => $value)
             {
+                if (!empty($value['roles']) && (!Auth::user()->hasRole($value['roles'])))
+                    continue;                 
+
                 $element_extra_classes = (!empty($value['element_extra_classes'])?$value['element_extra_classes']:'');
                 $ext_attr = (!empty($value['element_extra_attributes'])?$value['element_extra_attributes']:'');
             
@@ -315,7 +318,7 @@ function sideContentData($array = [])
             'label'=> (Auth::user()->hasRole(['admin','master'])?'dashboard':'home'),
             'link'=>'admin.dashboard',
             'icon'=>'home',
-            'roles'=> ['admin','master'],
+            'roles'=> ['admin','master','broker'],
             'childData'=>[]
         ],
         [
@@ -323,52 +326,61 @@ function sideContentData($array = [])
             'link'=>'',
             'icon'=>'trending-up',
             'open'=>'open',
-            'roles'=> ['admin','master'],
+            'roles'=> ['admin','master','broker', 'user'],
             'childData'=>[
                 [
                     'label'=>'watchlist',
                     'link'=>'view.watchlist',
                     'icon'=>'circle',
+                    'roles'=> ['admin','master','broker','user']
                 ],
                 [
                     'label'=>'trades',
                     'link'=>'view.trades',
                     'icon'=>'circle',
+                    'roles'=> ['admin','master','broker','user']
                 ],
                 [
                     'label'=>'portfolio/position',
                     'link'=>'portfolio',
                     'icon'=>'circle',
+                    'roles'=> ['admin','master','broker','user']
                 ],
                 [
                     'label'=>'banned/blocked script',
                     'link'=>'blocked-script',
                     'icon'=>'circle',
+                    'roles'=> ['admin','master','user']
                 ],
                 [
                     'label'=>'margin management',
                     'link'=>'margin-management',
                     'icon'=>'circle',
+                    'roles'=> ['admin','master','user']
                 ],
                 [
                     'label'=>'manual trade',
                     'link'=>'manual-trade',
                     'icon'=>'circle',
+                    'roles'=> ['admin','master','user']
                 ],
                 [
                     'label'=>'summery report',
                     'link'=>'summery-report',
                     'icon'=>'circle',
+                    'roles'=> ['admin','master','broker','user']
                 ],
                 [
                     'label'=>'self P&L',
                     'link'=>'self-profit-loss',
                     'icon'=>'circle',
+                    'roles'=> ['admin','master','user']
                 ],
                 [
                     'label'=>'brokerage refresh',
                     'link'=>'brokerage-refresh',
                     'icon'=>'circle',
+                    'roles'=> ['admin','master','user'],
                 ]
             ]
         ],
@@ -377,35 +389,40 @@ function sideContentData($array = [])
             'link'=>'',
             'icon'=>'user',
             'open'=>'open',
-            'roles'=> ['admin','master'],
+            'roles'=> ['admin','master', 'broker'],
             'childData'=>[
                 [
                     'label'=>'user listing',
                     'link'=>'view.user',
                     'link_attribute'=>[],
                     'icon'=>'circle',
+                    'roles'=> ['admin','master', 'broker', 'user'],
                 ],
                 [
                     'label'=>'master listing',
                     'link'=>'view.user',
                     'link_attribute'=>['master'],
                     'icon'=>'circle',
+                    'roles'=> ['admin','master','user'],
                 ],
                 [
                     'label'=>'broker listing',
                     'link'=>'view.user',
                     'link_attribute'=>['broker'],
                     'icon'=>'circle',
+                    'roles'=> ['admin','master','user'],
                 ],
                 [
                     'label'=>'add account',
                     'link'=>'create.user',
                     'icon'=>'user-plus',
+                    'roles'=> ['admin','master','user'],
                 ],
                 [
                     'label'=>'wallet',
                     'link'=>'wallet.view',
                     'icon'=>'circle',
+                    'roles'=> ['admin','master','user'],
                 ]
             ]
         ],
